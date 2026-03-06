@@ -4,7 +4,7 @@ services:
     container_name: TCAapp
     restart: always
     build: ./TCA
-    command: gunicorn tablero_control.wsgi:application --bind 0.0.0.0:8000 --reload
+    command: gunicorn tablero_control.wsgi:application --bind 0.0.0.0:8000 --reload --workers 5 --threads 2 --timeout 60
     # command: python manage.py runserver 0.0.0.0:8000
     expose:
       - 8000
