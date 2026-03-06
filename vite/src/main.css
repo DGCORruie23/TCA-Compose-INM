@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.toggle-icon-level1::before {
+    font-size: 2rem;
+    content: "+";
+}
+details[open] > summary .toggle-icon-level1::before {
+  content: "-";
+}
+
+/* Nivel 2 */
+.toggle-icon-level2::before {
+  content: "▶";
+}
+details[open] > summary .toggle-icon-level2::before {
+  content: "▼";
+}
