@@ -75,6 +75,7 @@ def general(request):
 
         for registro in registros_visitas:
             oficina_ = str(consultarAreas.filter(idArea=registro['area']).first().name).replace("OR ","")
+            or_map = str(consultarAreas.filter(idArea=registro['area']).first().nickname).replace("OR ","")
             if oficina_ in ors_mapa:
                 ors_mapa[oficina_].append({
                     'fecha': datetime.strftime(registro['fecha_inicio'], "%d/%m/%Y"),
@@ -82,6 +83,7 @@ def general(request):
                     'pendiente': registro['pendiente'],
                     'atendido': registro['atendido'],
                     'avance': registro['seguimiento'],
+                    'or_map': or_map,
                     })
         
         # print(ors_mapa)

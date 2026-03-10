@@ -47,6 +47,7 @@ def dashboard(request):
         filtro = request.GET.get('filtro')
         tiempo = request.GET.get('año')
         respA = request.GET.get('resp')
+        estatus = request.GET.get('estatus')
         
         # print(f"filtro {filtro}")
         # print(f"filtro {tiempo}")
@@ -61,6 +62,8 @@ def dashboard(request):
 
         registros = Registro.objects.all()
 
+        opcEstado = ["1", "2"]
+
         # print(areas_n)
         formCargar1 = CargarArchivoForm()
         if userDataI[0].tipo == "1":
@@ -69,12 +72,15 @@ def dashboard(request):
                 registros = registros.filter(area=filtroB.idArea)
 
             if tiempo in lista_años:
-                print(f"filtro {tiempo}")
+                # print(f"filtro {tiempo}")
                 registros = registros.filter(fecha_inicio__year=tiempo)
 
             if respA in nombres_areas:
                 filtroC = Area.objects.get(nickname = respA)
                 registros = registros.filter(accionR__area2=filtroC)
+
+            if estatus in opcEstado:
+                registros = registros.filter(estado=estatus)
             
             # print(f"registros {registros.count()}")
         else:
@@ -97,6 +103,9 @@ def dashboard(request):
             if respA in nombres_areas:
                 filtroC = Area.objects.get(nickname = respA)
                 registros = registros.filter(accionR__area2=filtroC)
+
+            if estatus in opcEstado:
+                registros = registros.filter(estado=estatus)
             
             # print(f"registros {registros.count()}")
 
@@ -180,9 +189,11 @@ def dashboard(request):
             'formCargar1': formCargar1,
             'areas_n': areas_n,
             'lista_años': lista_años,
+            'opcEstado': opcEstado,
             'filtroOR': filtro,
             'filtroAño': tiempo,
             'filtroResp': respA,
+            'filtroEstatus': estatus,
         }
 
         user_agent = request.META.get('HTTP_USER_AGENT', '').lower()

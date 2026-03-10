@@ -76,49 +76,49 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   //-----------------------------------------------------------
 
-    // Posición de la barra de colores a la derecha
-    const legendX = width - 80;  // 50 px desde el borde derecho
-    const legendY = 50;
-    const legendWidth = 20;
-    const legendHeight = 300;
+  // Posición de la barra de colores a la derecha
+  const legendX = width - 80;  // 50 px desde el borde derecho
+  const legendY = 50;
+  const legendWidth = 20;
+  const legendHeight = 300;
 
-    // Escala de color en hex
-    const colorScaleI = d3.scaleLinear()
-      .domain([0, 0.5, 1])
-      .range(["#612332", "#e6d194", "#002f2a"]);
+  // Escala de color en hex
+  const colorScaleI = d3.scaleLinear()
+    .domain([0, 0.5, 1])
+    .range(["#612332", "#e6d194", "#002f2a"]);
 
-    // Dibujar la barra de color vertical con 100 pasos
-    const steps = 100;
-    const stepHeight = legendHeight / steps;
+  // Dibujar la barra de color vertical con 100 pasos
+  const steps = 100;
+  const stepHeight = legendHeight / steps;
 
-    for(let i = 0; i < steps; i++) {
-      svg.append("rect")
-        .attr("x", legendX)
-        .attr("y", legendY + i * stepHeight)
-        .attr("width", legendWidth)
-        .attr("height", stepHeight)
-        .attr("fill", colorScaleI(1 - i/(steps-1))); // invertir para que 0% arriba y 100% abajo
-    }
+  for (let i = 0; i < steps; i++) {
+    svg.append("rect")
+      .attr("x", legendX)
+      .attr("y", legendY + i * stepHeight)
+      .attr("width", legendWidth)
+      .attr("height", stepHeight)
+      .attr("fill", colorScaleI(1 - i / (steps - 1))); // invertir para que 0% arriba y 100% abajo
+  }
 
-    // Etiquetas: 0%, 50%, 100%
-    const labels = [
-      {text: "100%", y: legendY},  // arriba
-      {text: "50%", y: legendY + legendHeight/2}, // medio
-      {text: "0%", y: legendY + legendHeight}   // abajo
-    ];
+  // Etiquetas: 0%, 50%, 100%
+  const labels = [
+    { text: "100%", y: legendY },  // arriba
+    { text: "50%", y: legendY + legendHeight / 2 }, // medio
+    { text: "0%", y: legendY + legendHeight }   // abajo
+  ];
 
-    svg.selectAll(".legend-label")
-      .data(labels)
-      .enter()
-      .append("text")
-      .attr("x", legendX + legendWidth + 5)
-      .attr("y", d => d.y)
-      .attr("alignment-baseline", d => {
-        if(d.text === "0%") return "hanging";
-        if(d.text === "50%") return "middle";
-        return "baseline";
-      })
-      .text(d => d.text);
+  svg.selectAll(".legend-label")
+    .data(labels)
+    .enter()
+    .append("text")
+    .attr("x", legendX + legendWidth + 5)
+    .attr("y", d => d.y)
+    .attr("alignment-baseline", d => {
+      if (d.text === "0%") return "hanging";
+      if (d.text === "50%") return "middle";
+      return "baseline";
+    })
+    .text(d => d.text);
 
   //-----------------------------------------------------------
 
@@ -300,6 +300,16 @@ document.addEventListener("DOMContentLoaded", () => {
     td.textContent = texto;
     return td;
   }
+  function crearTdLink(texto, url, oficina, fecha) {
+    const td = document.createElement("td");
+    td.className = "border border-gray-300 px-4 py-2 text-lg text-center font-bold text-inm-rojo-100 bg-[#f3bcd2]";
+    let link = document.createElement("a");
+    link.textContent = texto;
+    link.href = url.replace("estadistica/generales/", "") + "dashboard/?filtro=OR%20" + oficina + "&año=" + fecha + "&estatus=1";
+
+    td.appendChild(link);
+    return td;
+  }
 
   estados.forEach((estado, index) => {
     estado.addEventListener("click", () => {
@@ -314,7 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (avacesOR == 200) {
           modalInfo.textContent =
-          "Sin visita";
+            "Sin visita";
           document.getElementById("tabla_M").style.display = 'none';
         } else {
           document.getElementById("tabla_M").style.display = 'block';
@@ -323,8 +333,8 @@ document.addEventListener("DOMContentLoaded", () => {
             avacesOR +
             "%";
         }
-        
-        
+
+
         const tbody = document.getElementById("mi-tbody");
         tbody.innerHTML = "";
 
@@ -333,11 +343,11 @@ document.addEventListener("DOMContentLoaded", () => {
             // caso: lista de objetos
             items.forEach(item => {
               const tr = document.createElement("tr");
-              tr.appendChild(crearTd(index2+1));
+              tr.appendChild(crearTd(index2 + 1));
               tr.appendChild(crearTd(item.fecha));
               tr.appendChild(crearTd(item.total));
               tr.appendChild(crearTd(item.atendido));
-              if (item.pendiente > 0 ){
+              if (item.pendiente > 0) {
                 tr.appendChild(crearTdR(item.pendiente));
               } else {
                 tr.appendChild(crearTd(item.pendiente));
@@ -347,16 +357,16 @@ document.addEventListener("DOMContentLoaded", () => {
             });
           } else if (typeof items === "object" && items !== null) {
             // caso: un solo objeto
-            console.log(1,items.total, "aten"+items.atendido, items.pendiente)
+            console.log(1, items.total, "aten" + items.atendido, items.pendiente)
             const tr = document.createElement("tr");
             tr.appendChild(crearTd(1));
             tr.appendChild(crearTd(items.fecha));
             tr.appendChild(crearTd(items.total));
             tr.appendChild(crearTd(items.atendido));
-            if (items.pendiente > 0 ){
-                tr.appendChild(crearTdR(items.pendiente));
+            if (items.pendiente > 0) {
+              tr.appendChild(crearTdLink(items.pendiente, window.location.href, items.or_map, items.fecha.split("/")[2]));
             } else {
-                tr.appendChild(crearTd(items.pendiente));
+              tr.appendChild(crearTd(items.pendiente));
             }
             tr.appendChild(crearTd(items.avance));
             tbody.appendChild(tr);
@@ -385,20 +395,20 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // if (Array.isArray(items) && items.length > 0) {
-          //   console.log(items);
-          //   items.forEach( item => {
-          //     const tr = document.createElement("tr");
-          //     tr.appendChild(crearTd(item.fecha));
-          //     tr.appendChild(crearTd(item.total));
-          //     tr.appendChild(crearTd(item.pendiente));
-          //     tr.appendChild(crearTd(item.atendido));
-          //     tr.appendChild(crearTd(item.avance));
-          //     // // Crear celda
-          //     // const td = document.createElement("td");
-          //     // td.className = "bg-gray-500 border border-gray-300 text-sm px-2 py-2 text-center";
-          //     // td.textContent = "Dato 1";
-          //     // // Agregar celda a la fila
-          //     // tr.appendChild(td);
-          //     // Agregar fila al tbody
-          //     tbody.appendChild(tr);
-          //   });
+//   console.log(items);
+//   items.forEach( item => {
+//     const tr = document.createElement("tr");
+//     tr.appendChild(crearTd(item.fecha));
+//     tr.appendChild(crearTd(item.total));
+//     tr.appendChild(crearTd(item.pendiente));
+//     tr.appendChild(crearTd(item.atendido));
+//     tr.appendChild(crearTd(item.avance));
+//     // // Crear celda
+//     // const td = document.createElement("td");
+//     // td.className = "bg-gray-500 border border-gray-300 text-sm px-2 py-2 text-center";
+//     // td.textContent = "Dato 1";
+//     // // Agregar celda a la fila
+//     // tr.appendChild(td);
+//     // Agregar fila al tbody
+//     tbody.appendChild(tr);
+//   });

@@ -133,6 +133,12 @@
 					{% endif %}
 				{% endfor %}
 			</select>
+
+			<select id="filtroEstatus" multiple>
+				<option value="">Mostrar todos</option>
+					<option value="1">En proceso</option>
+					<option value="2">Atendido</option>
+			</select>
 		</div>
 
 		<div class="bdtable bg-inm-marron-100 table-container">
@@ -416,6 +422,7 @@
 				var filtro1 = document.getElementById('filtroArea').value;
 				var filtro2 = document.getElementById('filtroAnual').value;
 				var filtro3 = document.getElementById('filtroArea2').value;
+				var filtro4 = document.getElementById('filtroEstatus').value;
 				var currentUrl = window.location.href.split('?')[0]; // Obtener la URL base sin parámetros
 				var newUrl = currentUrl + '?';
 
@@ -437,6 +444,12 @@
 					}
 					newUrl += 'resp=' + filtro3;
 				}
+				if (filtro4) {
+					if (newUrl !== currentUrl + '?') {
+						newUrl += '&';
+					}
+					newUrl += 'estatus=' + filtro4;
+				}
 				// Redirigir a la nueva URL con ambos filtros
 				window.location.href = newUrl;
 			}
@@ -444,6 +457,7 @@
 			document.getElementById('filtroArea').addEventListener('change', aplicarFiltros);
 			document.getElementById('filtroArea2').addEventListener('change', aplicarFiltros);
 			document.getElementById('filtroAnual').addEventListener('change', aplicarFiltros);
+			document.getElementById('filtroEstatus').addEventListener('change', aplicarFiltros);
 			//document.getElementById('searchStatus1').addEventListener('input', myFunction("searchStatus1"));
 			document.getElementById('searchStatus1').addEventListener('input', filterTable());
 
