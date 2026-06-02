@@ -102,44 +102,93 @@
 			<input type="text" id="searchClave1" placeholder="Buscar por Clave de Acuerdo/OR" onkeyup="filterTable()">
 			<input type="text" id="searchDescripcion" placeholder="Buscar por Descripción" onkeyup="filterTable()">
 
-			<select id="filtroArea" multiple {% if dataU.0.tipo == "2" %}hidden{% endif %}>
-				<option value="">Mostrar todos</option>
-				{% if dataU.0.tipo == "1" %}
-					{% for area in areas_n %}
-						<option value="{{ area }}">{{ area }}</option>
-					{% endfor %}
-				{% elif dataU.0.tipo == "2" %}
-					{% for area in areas_n %}
-						{% if forloop.counter > 32 %}
-							<option value="{{ area }}">{{ area }}</option>
-						{% endif %}
-					{% endfor %}
-				{% endif %}
-			</select>
-			
-
-			<select id="filtroAnual" multiple>
-				<option value="">Mostrar todos</option>
-				{% for diaA in lista_años %}
-					<option value="{{ diaA }}">{{ diaA }}</option>
-				{% endfor %}
-			</select>
-
-			<select id="filtroArea2" multiple>
-				<option value="">Mostrar todos</option>
-				{% for area in areas_n %}
-					{% if forloop.counter > 32 %}
-						<option value="{{ area }}">{{ area }}</option>
-					{% endif %}
-				{% endfor %}
-			</select>
-
-			<select id="filtroEstatus" multiple>
-				<option value="">Mostrar todos</option>
-					<option value="1">En proceso</option>
-					<option value="2">Atendido</option>
-			</select>
+			<div class="flex justify-center w-full col-span-3">
+				<button onclick="openFiltersModal()" class="py-3 px-10 bg-inm-marron-100 hover:bg-inm-marron-200 rounded-xl text-white font-bold shadow-lg transition-all transform hover:scale-105">
+					Filtrar por
+				</button>
+			</div>
 		</div>
+
+		<!-- Modal de Filtros Avanzados -->
+		<div id="filtersModal" class="modal">
+			<div class="modal-content filters-modal-content">
+				<span class="close" onclick="closeFiltersModal()">&times;</span>
+				<h2 class="popupTitle verde">Filtros Avanzados</h2>
+				
+				<form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+					<!-- Sección Area OR -->
+					<div class="filter-section" {% if dataU.0.tipo == "2" %}hidden{% endif %}>
+						<h3 class="marron border-b-2 border-inm-rojo-100 mb-2">Área (OR)</h3>
+						<div class="filter-options-container">
+							<select id="filtroAreaModal" class="filter-select-styled">
+								<option value="">Mostrar todos</option>
+								{% if dataU.0.tipo == "1" %}
+									{% for area in areas_n %}
+										<option value="{{ area }}" {% if filtroOR == area %}selected{% endif %}>{{ area }}</option>
+									{% endfor %}
+								{% elif dataU.0.tipo == "2" %}
+									{% for area in areas_n %}
+										{% if forloop.counter > 32 %}
+											<option value="{{ area }}" {% if filtroOR == area %}selected{% endif %}>{{ area }}</option>
+										{% endif %}
+									{% endfor %}
+								{% endif %}
+							</select>
+						</div>
+					</div>
+
+					<!-- Sección Anual -->
+					<div class="filter-section">
+						<h3 class="marron border-b-2 border-inm-rojo-100 mb-2">Año</h3>
+						<div class="filter-options-container">
+							<select id="filtroAnualModal" class="filter-select-styled">
+								<option value="">Mostrar todos</option>
+								{% for diaA in lista_años %}
+									<option value="{{ diaA }}" {% if filtroAño == diaA %}selected{% endif %}>{{ diaA }}</option>
+								{% endfor %}
+							</select>
+						</div>
+					</div>
+
+					<!-- Sección Area Responsable -->
+					<div class="filter-section">
+						<h3 class="marron border-b-2 border-inm-rojo-100 mb-2">Área Responsable</h3>
+						<div class="filter-options-container">
+							<select id="filtroArea2Modal" class="filter-select-styled">
+								<option value="">Mostrar todos</option>
+								{% for area in areas_n %}
+									{% if forloop.counter > 32 %}
+										<option value="{{ area }}" {% if filtroResp == area %}selected{% endif %}>{{ area }}</option>
+									{% endif %}
+								{% endfor %}
+							</select>
+						</div>
+					</div>
+
+					<!-- Sección Estatus -->
+					<div class="filter-section">
+						<h3 class="marron border-b-2 border-inm-rojo-100 mb-2">Estatus</h3>
+						<div class="filter-options-container">
+							<select id="filtroEstatusModal" class="filter-select-styled">
+								<option value="">Mostrar todos</option>
+								<option value="1" {% if filtroEstatus == "1" %}selected{% endif %}>En proceso</option>
+								<option value="2" {% if filtroEstatus == "2" %}selected{% endif %}>Atendido</option>
+							</select>
+						</div>
+					</div>
+				</form>
+
+				<div class="flex justify-center gap-4 mt-6 pb-4">
+					<button onclick="clearFilters()" class="py-2 px-6 bg-gray-400 hover:bg-gray-500 rounded-xl text-white font-bold">
+						Limpiar
+					</button>
+					<button onclick="aplicarFiltrosModal()" class="py-2 px-8 bg-inm-verde-100 hover:bg-inm-verde-200 rounded-xl text-white font-bold">
+						Aplicar Filtros
+					</button>
+				</div>
+			</div>
+		</div>
+
 
 		<div class="bdtable bg-inm-marron-100 table-container">
 			<table id="myTable" >
@@ -418,46 +467,55 @@
 
 			}
 
-			function aplicarFiltros() {
-				var filtro1 = document.getElementById('filtroArea').value;
-				var filtro2 = document.getElementById('filtroAnual').value;
-				var filtro3 = document.getElementById('filtroArea2').value;
-				var filtro4 = document.getElementById('filtroEstatus').value;
-				var currentUrl = window.location.href.split('?')[0]; // Obtener la URL base sin parámetros
+			function openFiltersModal() {
+				document.getElementById('filtersModal').style.display = 'flex';
+			}
+
+			function closeFiltersModal() {
+				document.getElementById('filtersModal').style.display = 'none';
+			}
+
+			function clearFilters() {
+				document.getElementById('filtroAreaModal').value = "";
+				document.getElementById('filtroAnualModal').value = "";
+				document.getElementById('filtroArea2Modal').value = "";
+				document.getElementById('filtroEstatusModal').value = "";
+			}
+
+			function aplicarFiltrosModal() {
+				var filtro1 = document.getElementById('filtroAreaModal').value;
+				var filtro2 = document.getElementById('filtroAnualModal').value;
+				var filtro3 = document.getElementById('filtroArea2Modal').value;
+				var filtro4 = document.getElementById('filtroEstatusModal').value;
+				var currentUrl = window.location.href.split('?')[0];
 				var newUrl = currentUrl + '?';
 
 				if (filtro1) {
-					if (newUrl !== currentUrl + '?') {
-						newUrl += '&';
-					}
+					if (newUrl !== currentUrl + '?') newUrl += '&';
 					newUrl += 'filtro=' + filtro1;
 				}
 				if (filtro2) {
-					if (newUrl !== currentUrl + '?') {
-						newUrl += '&';
-					}
+					if (newUrl !== currentUrl + '?') newUrl += '&';
 					newUrl += 'año=' + filtro2;
 				}
 				if (filtro3) {
-					if (newUrl !== currentUrl + '?') {
-						newUrl += '&';
-					}
+					if (newUrl !== currentUrl + '?') newUrl += '&';
 					newUrl += 'resp=' + filtro3;
 				}
 				if (filtro4) {
-					if (newUrl !== currentUrl + '?') {
-						newUrl += '&';
-					}
+					if (newUrl !== currentUrl + '?') newUrl += '&';
 					newUrl += 'estatus=' + filtro4;
 				}
-				// Redirigir a la nueva URL con ambos filtros
 				window.location.href = newUrl;
 			}
 
-			document.getElementById('filtroArea').addEventListener('change', aplicarFiltros);
-			document.getElementById('filtroArea2').addEventListener('change', aplicarFiltros);
-			document.getElementById('filtroAnual').addEventListener('change', aplicarFiltros);
-			document.getElementById('filtroEstatus').addEventListener('change', aplicarFiltros);
+			function aplicarFiltros() {
+				// Esta función ya no se usa directamente por cambios en botones
+				// Pero se mantiene por si hay referencias externas
+			}
+
+			// Event listeners eliminados ya que usamos botones en el modal
+
 			//document.getElementById('searchStatus1').addEventListener('input', myFunction("searchStatus1"));
 			document.getElementById('searchStatus1').addEventListener('input', filterTable());
 

@@ -719,3 +719,38 @@ td#fechaTermino {
 
     border-radius: 5px;
 }
+
+/* Estilos para el Modal de Filtros */
+.filters-modal-content {
+    max-width: 800px !important;
+    width: 90% !important;
+}
+
+.filter-section {
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.filter-select-styled {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.filter-select-styled:focus {
+    border-color: #235B4E;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(35, 91, 78, 0.2);
+}
+
+.marron.border-b-2 {
+    font-weight: bold;
+    font-size: 16px;
+    padding-bottom: 5px;
+}

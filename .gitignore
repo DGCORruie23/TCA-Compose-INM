@@ -11,3 +11,4 @@ certificados/
 vite/node_modules/
 TCA/zdata/
 .DS_Store
+Control/node_modules/
