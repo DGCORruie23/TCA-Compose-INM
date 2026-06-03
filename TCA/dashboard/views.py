@@ -48,13 +48,6 @@ def dashboard(request):
         tiempo = request.GET.get('año')
         respA = request.GET.get('resp')
         estatus = request.GET.get('estatus')
-        fecha_ini_url = request.GET.get('fe_ini')
-        fecha_ini_date = None
-        if fecha_ini_url:
-            try:
-                fecha_ini_date = parse(fecha_ini_url).date()
-            except Exception:
-                fecha_ini_date = None
         
         # print(f"filtro {filtro}")
         # print(f"filtro {tiempo}")
@@ -71,8 +64,6 @@ def dashboard(request):
 
         opcEstado = ["1", "2"]
 
-        fechas_iniciales = Registro.objects.dates("fecha_inicio")
-
         # print(areas_n)
         formCargar1 = CargarArchivoForm()
         if userDataI[0].tipo == "1":
@@ -82,10 +73,7 @@ def dashboard(request):
 
             if tiempo in lista_años:
                 # print(f"filtro {tiempo}")
-                if fecha_ini_date and fecha_ini_date in fechas_iniciales:
-                    registros = registros.filter(fecha_inicio=fecha_ini_date)
-                else:
-                    registros = registros.filter(fecha_inicio__year=tiempo)
+                registros = registros.filter(fecha_inicio__year=tiempo)
 
             if respA in nombres_areas:
                 filtroC = Area.objects.get(nickname = respA)
@@ -110,10 +98,7 @@ def dashboard(request):
 
             if tiempo in lista_años:
                 # print(f"filtro {tiempo}")
-                if fecha_ini_date and fecha_ini_date in fechas_iniciales:
-                    registros = registros.filter(fecha_inicio=fecha_ini_date)
-                else:
-                    registros = registros.filter(fecha_inicio__year=tiempo)
+                registros = registros.filter(fecha_inicio__year=tiempo)
 
             if respA in nombres_areas:
                 filtroC = Area.objects.get(nickname = respA)
