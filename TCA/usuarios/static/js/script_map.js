@@ -300,12 +300,20 @@ document.addEventListener("DOMContentLoaded", () => {
     td.textContent = texto;
     return td;
   }
-  function crearTdLink(texto, url, oficina, fecha) {
+  function crearTdLink(texto, url, oficina, fechaCompleta) {
     const td = document.createElement("td");
     td.className = "border border-gray-300 px-4 py-2 text-lg text-center font-bold text-inm-rojo-100 bg-[#f3bcd2]";
     let link = document.createElement("a");
     link.textContent = texto;
-    link.href = url.replace("estadistica/generales/", "") + "dashboard/?filtro=OR%20" + oficina + "&año=" + fecha + "&estatus=1";
+    link.className = "text-inm-rojo-100 hover:underline";
+
+    const partes = fechaCompleta.split("/");
+    const ano = partes[2];
+    const mes = partes[1];
+    const dia = partes[0];
+    const fechaISO = `${ano}-${mes}-${dia}`; // YYYY-MM-DD
+
+    link.href = window.location.origin + "/dashboard/?filtro=OR%20" + oficina + "&año=" + ano + "&fe_ini=" + fechaISO + "&estatus=1";
 
     td.appendChild(link);
     return td;
@@ -348,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
               tr.appendChild(crearTd(item.total));
               tr.appendChild(crearTd(item.atendido));
               if (item.pendiente > 0) {
-                tr.appendChild(crearTdR(item.pendiente));
+                tr.appendChild(crearTdLink(item.pendiente, window.location.href, item.or_map, item.fecha));
               } else {
                 tr.appendChild(crearTd(item.pendiente));
               }
@@ -364,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
             tr.appendChild(crearTd(items.total));
             tr.appendChild(crearTd(items.atendido));
             if (items.pendiente > 0) {
-              tr.appendChild(crearTdLink(items.pendiente, window.location.href, items.or_map, items.fecha.split("/")[2]));
+              tr.appendChild(crearTdLink(items.pendiente, window.location.href, items.or_map, items.fecha));
             } else {
               tr.appendChild(crearTd(items.pendiente));
             }

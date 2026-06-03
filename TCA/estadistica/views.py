@@ -90,12 +90,16 @@ def general(request):
 
         for registro in registros_visitas:
             # print(f"OR: {consultarAreas.filter(idArea=registro['area']).first().name} Fecha: {registro['fecha_inicio']} TOTAL {registro['total']}")
+            area_obj = consultarAreas.filter(idArea=registro['area']).first()
             registro_V_A.append({
-                'area': str(consultarAreas.filter(idArea=registro['area']).first().name).replace("OR ",""),
+                'area': str(area_obj.name).replace("OR ",""),
                 'fecha': datetime.strftime(registro['fecha_inicio'], "%d/%m/%Y"),
                 'total': registro['total'],
                 'pendiente': registro['pendiente'],
                 'atendido': registro['atendido'],
+                'or_map': str(area_obj.nickname).replace("OR ",""),
+                'fecha_iso': registro['fecha_inicio'].strftime("%Y-%m-%d"),
+                'year': registro['fecha_inicio'].year,
             })
 
         # registros_years = registros.values( "fecha_inicio", year=ExtractYear('fecha_inicio')).annotate(

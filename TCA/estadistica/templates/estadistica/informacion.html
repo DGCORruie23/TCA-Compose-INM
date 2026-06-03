@@ -214,7 +214,15 @@
                         <td class="border border-gray-300 px-4 py-2 text-center">{{ dato.fecha }}</td>
                         <td class="border border-gray-300 px-4 py-2 text-center">{{ dato.total }}</td>
                         <td class="border border-gray-300 px-4 py-2 text-center">{{ dato.atendido }}</td>
-                        <td class="border border-gray-300 px-4 py-2 text-center">{{ dato.pendiente }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">
+                            {% if dato.pendiente > 0 %}
+                                <a href="{% url 'dashboard' %}?filtro=OR%20{{ dato.or_map }}&año={{ dato.year }}&fe_ini={{ dato.fecha_iso }}&estatus=1" class="text-inm-rojo-100 font-bold hover:underline">
+                                    {{ dato.pendiente }}
+                                </a>
+                            {% else %}
+                                {{ dato.pendiente }}
+                            {% endif %}
+                        </td>
                         <td class="border border-gray-300 px-4 py-2 text-center">{% widthratio dato.atendido dato.total 100 %}%</td>
                     </tr>
                     {% endfor %}
