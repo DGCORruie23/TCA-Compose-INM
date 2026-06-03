@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'estadistica',
     'panel',
     'supervision',
+    'api',
 
     # terceros
     'rest_framework',
