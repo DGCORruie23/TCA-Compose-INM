@@ -1,6 +1,6 @@
 from django.http import JsonResponse
-from django.db.models import Count, Avg, IntegerField, Q
-from usuarios.models import Area, Registro
+from django.db.models import Count, Avg, IntegerField, Q, Subquery
+from usuarios.models import Area, Registro, Periodo
 from datetime import datetime
 
 def mapa_datos(request):
@@ -12,7 +12,11 @@ def mapa_datos(request):
     """
     try:
         consultarAreas = Area.objects.all()
-        registros = Registro.objects.all()
+        registros = Registro.objects.filter(
+            periodo_id = Subquery(
+                Periodo.objects.order_by('-id').values('id')[:1]
+            )
+        )
         
         registros_visitas = registros.values('area', 'fecha_inicio').annotate(
             total=Count('idRegistro'),
