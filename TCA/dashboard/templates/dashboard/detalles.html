@@ -243,39 +243,65 @@
     <button type="submit">Enviar</button>
 </form>
 
-{% comment %} <div id="resultMessage"></div>
+<div id="resultMessage" style="text-align: center; margin-top: 10px; font-weight: bold;"></div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    // Función que maneja la subida asíncrona del archivo usando jQuery AJAX
-    $(document).ready(function(){
-        $('#uploadForm').on('submit', function(e){
-            e.preventDefault();  // Evitar que el formulario se envíe de forma normal
-            
-            var formData = new FormData(this);  // Crear objeto FormData con los datos del formulario
-
-            // Realizar la solicitud AJAX
-            $.ajax({
-                url: "{% url 'detalles' registro.idRegistro %}",  // URL de la vista que maneja la subida
-                type: "POST",
-                data: formData,
-                contentType: false,  // Necesario para procesar datos de archivo
-                processData: false,  // Evita que jQuery procese los datos
-                success: function(response){
-                    // Mostrar mensaje de éxito
-                    $('#resultMessage').html('<p style="color:green;">' + response.message + '</p>');
-                    setTimeout(function(){
-                        location.reload();
-                    }, 1000);
-                },
-                error: function(response){
-                    // Mostrar mensaje de error
-                    $('#resultMessage').html('<p style="color:red;">Error: ' + response.responseJSON.error + '</p>');
-                }
-            });
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Evitar envío por defecto
+        
+        var form = this;
+        var formData = new FormData(form);
+        
+        // 1. Obtener y quitar el Token CSRF de los datos del BODY
+        var csrfToken = formData.get('csrfmiddlewaretoken');
+        formData.delete('csrfmiddlewaretoken');
+        
+        // 2. Codificar en Base64 el campo de texto (Evitar firmas de SQLi/XSS en el WAF)
+        var textoField = formData.get('texto');
+        if (textoField) {
+            // Función para codificar a base64 respetando caracteres UTF-8
+            var encodedTexto = btoa(encodeURIComponent(textoField).replace(/%([0-9A-F]{2})/g,
+                function toSolidBytes(match, p1) {
+                    return String.fromCharCode('0x' + p1);
+            }));
+            formData.set('texto', encodedTexto);
+        }
+        
+        var resultDiv = document.getElementById('resultMessage');
+        resultDiv.style.color = '#235B4E';
+        resultDiv.textContent = 'Enviando mensaje de forma segura...';
+        
+        // 3. Enviar la petición usando fetch con el CSRF Token en los HEADERS
+        fetch("{% url 'detalles' registro.idRegistro %}", {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(function(response) {
+            if (response.ok) {
+                return response.json();
+            } else {
+                return response.json().then(function(err) {
+                    throw new Error(err.error || 'Error al enviar el mensaje');
+                });
+            }
+        })
+        .then(function(data) {
+            resultDiv.style.color = 'green';
+            resultDiv.textContent = data.message || 'Mensaje enviado con éxito';
+            setTimeout(function() {
+                location.reload();
+            }, 800);
+        })
+        .catch(function(error) {
+            resultDiv.style.color = 'red';
+            resultDiv.textContent = error.message;
         });
     });
-</script> {% endcomment %}
+</script>
 
 {% endif %}
 {% endblock content %}

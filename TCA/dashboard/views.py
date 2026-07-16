@@ -271,7 +271,19 @@ def detalles(request, registro_id):
     #         return JsonResponse({'error': form.errors}, status=400)
         
     if request.method == 'POST':
-        mensaje_form = MensajeForm(request.POST, request.FILES)
+        post_data = request.POST.copy()
+        texto_original = post_data.get('texto', '')
+        if texto_original:
+            try:
+                import base64
+                # Decodificar base64
+                decoded_bytes = base64.b64decode(texto_original)
+                post_data['texto'] = decoded_bytes.decode('utf-8')
+            except Exception:
+                # Si falla, conservar el texto original por si no venía en base64
+                pass
+
+        mensaje_form = MensajeForm(post_data, request.FILES)
         if mensaje_form.is_valid():
 
             nuevo_mensaje = mensaje_form.save(commit=False)
@@ -283,7 +295,13 @@ def detalles(request, registro_id):
             
             generarNotificacion(registro.idRegistro, mensaje, userDataI.idUser)
 
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'message': 'Mensaje enviado con éxito'}, status=200)
+
             return redirect('detalles', registro_id=registro_id)
+        else:
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'error': mensaje_form.errors}, status=400)
     else:
         mensaje_form = MensajeForm()
 
