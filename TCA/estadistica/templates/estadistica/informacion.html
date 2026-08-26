@@ -7,6 +7,258 @@
 {% block styles %}
 <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 <link rel="stylesheet" href="{% static 'css/styles_map.css' %}">
+<style>
+    /* Estilos del filtro tipo Excel */
+    .filter-th-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        position: relative;
+        width: 100%;
+    }
+    
+    .filter-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 2px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #e2e8f0; /* slate-200 */
+        transition: color 0.2s;
+    }
+    
+    .filter-btn:hover {
+        color: #ffffff;
+    }
+    
+    .filter-btn.active {
+        color: #3b82f6; /* blue-500 si está activo */
+    }
+    
+    .filter-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin-top: 8px;
+        background-color: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        min-width: 220px;
+        max-width: 300px;
+        z-index: 50;
+        font-weight: normal;
+        text-align: left;
+        color: #1f2937; /* gray-800 */
+        padding: 8px;
+    }
+    
+    .filter-dropdown-search {
+        width: 100%;
+        padding: 4px 8px;
+        font-size: 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        outline: none;
+        color: #1f2937;
+    }
+    
+    .filter-dropdown-search:focus {
+        border-color: #3b82f6;
+    }
+    
+    .filter-dropdown-list {
+        max-height: 180px;
+        overflow-y: auto;
+        margin-bottom: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        border-top: 1px solid #f3f4f6;
+        border-bottom: 1px solid #f3f4f6;
+        padding: 6px 0;
+    }
+    
+    .filter-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        padding: 2px 4px;
+        border-radius: 3px;
+        color: #1f2937;
+    }
+    
+    .filter-dropdown-item:hover {
+        background-color: #f3f4f6;
+    }
+    
+    .filter-dropdown-item input {
+        cursor: pointer;
+    }
+    
+    .filter-dropdown-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    
+    .filter-dropdown-btn {
+        flex: 1;
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 500;
+        border-radius: 4px;
+        cursor: pointer;
+        text-align: center;
+    }
+    
+    .filter-dropdown-btn-primary {
+        background-color: #3b82f6;
+        color: #ffffff;
+        border: 1px solid #3b82f6;
+    }
+    
+    .filter-dropdown-btn-primary:hover {
+        background-color: #2563eb;
+    }
+    
+    .filter-dropdown-btn-secondary {
+        background-color: #f3f4f6;
+        color: #4b5563;
+        border: 1px solid #d1d5db;
+    }
+    
+    .filter-dropdown-btn-secondary:hover {
+        background-color: #e5e7eb;
+    }
+
+    /* Estilos del Calendario */
+    .calendar-day-box {
+        min-height: 90px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 6px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        background-color: #f9fafb;
+        transition: all 0.2s;
+    }
+    .calendar-day-box:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .calendar-day-box.empty {
+        background-color: #f3f4f6;
+        border-color: #f3f4f6;
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+    .calendar-day-box.today {
+        border-color: #3b82f6;
+        background-color: #eff6ff;
+    }
+    .calendar-day-box.has-visit {
+        background-color: #ecfdf5;
+        border-color: #34d399;
+    }
+    .calendar-day-number {
+        font-size: 14px;
+        font-weight: 700;
+        color: #4b5563;
+        margin-bottom: 4px;
+    }
+    .calendar-note-list {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        width: 100%;
+        overflow-y: auto;
+        max-height: 60px;
+    }
+    .calendar-note {
+        font-size: 9px;
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+        border-radius: 4px;
+        padding: 1px 3px;
+        text-align: left;
+        line-height: 1.2;
+        font-weight: 500;
+        word-break: break-word;
+    }
+
+    /* Estilos de impresión para guardar PDF */
+    @media print {
+        body * {
+            visibility: hidden !important;
+        }
+        #calendario-contenedor, #calendario-contenedor * {
+            visibility: visible !important;
+        }
+        #calendario-contenedor {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        #btn-print-calendar {
+            display: none !important;
+        }
+        #calendarios-grid-contenedor {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+        /* Salto de página después de cada 6 calendarios para garantizar 6 por hoja */
+        #calendarios-grid-contenedor > div {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            padding: 8px !important;
+        }
+        #calendarios-grid-contenedor > div:nth-child(6n) {
+            page-break-after: always !important;
+            break-after: page !important;
+        }
+        /* Reducir altura de días al imprimir para que quepan 2 filas de 3 en una sola hoja */
+        .calendar-day-box {
+            min-height: 42px !important;
+            padding: 2px !important;
+            border-radius: 4px !important;
+        }
+        .calendar-day-box.empty {
+            min-height: 42px !important;
+        }
+        .calendar-day-number {
+            font-size: 10px !important;
+            margin-bottom: 1px !important;
+        }
+        .calendar-note-list {
+            max-height: 28px !important;
+            gap: 1px !important;
+        }
+        .calendar-note {
+            font-size: 7px !important;
+            padding: 0px 2px !important;
+            border-radius: 2px !important;
+        }
+        h3 {
+            margin-bottom: 4px !important;
+            font-size: 12px !important;
+        }
+    }
+</style>
 {% endblock styles %}
 
 {% block body_class %}
@@ -134,7 +386,7 @@
                     <tr>
                         <th class="bg-black border border-gray-300 px-4 py-2 text text-center">Año</th>
                         <th class="bg-gray-500 border border-gray-300 px-4 py-2 text-center"># Visitas</th>
-                        <th class="bg-black border border-gray-300 px-4 py-2 text text-center"># Acuerdos</th>
+                        <th class="bg-black border border-gray-300 px-4 py-2 text text-center"><a href="{% url 'acuerdos_t' %}?periodo={{ seleccion }}"># Acuerdos</a></th>
                         <th class="bg-gray-500 border border-gray-300 px-4 py-2 text-center"># Atendidos</th>
                         <th class="bg-gray-500 border border-gray-300 px-4 py-2 text-center"><a href="{% url 'acuerdos_p' %}"># Pendientes</a></th>
                         
@@ -193,7 +445,7 @@
         <!-- Flex container para las tablas -->
         <div class="flex flex-row space-x-8">
             <!-- Tabla 1 -->
-            <table class="table-auto border-collapse border border-gray-300">
+            <table id="tablaExcel1" class="table-auto border-collapse border border-gray-300">
                 <thead>
                     <tr class="">
                         <th class="bg-black border border-gray-300 px-4 py-2 text text-center">ORs</th>
@@ -234,8 +486,25 @@
             </table>
 
             <!-- Tabla 2 -->
-            
         </div> 
+
+        <!-- Calendarios Mensuales Consecutivos de Visitas -->
+        <div class="mt-8 bg-white p-6 rounded-2xl shadow-lg border border-gray-200 w-full" id="calendario-contenedor">
+            <div class="mb-6 border-b pb-3 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-700">Calendario de Visitas Realizadas</h2>
+                    <p class="text-xs text-gray-500 mt-1">Histórico consecutivo desde la primera hasta la última visita registrada.</p>
+                </div>
+                <button id="btn-print-calendar" class="px-4 py-2 bg-inm-verde-100 hover:bg-inm-verde-200 text-white rounded-lg text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg> Guardar PDF
+                </button>
+            </div>
+            
+            <!-- Grid de 3 columnas de calendarios -->
+            <div id="calendarios-grid-contenedor" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+        </div>
 
     </section>
 
@@ -379,9 +648,506 @@
         setTimeout(() => {
             addSumTabla3();
         }, 100);
-        
-        
 
+        // Funcionalidad de filtros tipo Excel con ordenamiento
+        function initExcelFilters(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            
+            const headers = table.querySelectorAll('thead th');
+            const tbody = table.querySelector('tbody');
+            // originalRows servirá para poblar los filtros iniciales
+            const originalRows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+                const firstCell = row.cells[0];
+                return firstCell && !firstCell.textContent.trim().toUpperCase().includes('TOTAL');
+            });
+            const activeFilters = {};
+            
+            // Función auxiliar para determinar si una columna es numérica
+            function checkIsNumeric(colIdx) {
+                for (let i = 0; i < originalRows.length; i++) {
+                    const cell = originalRows[i].cells[colIdx];
+                    if (cell) {
+                        const val = cell.textContent.trim().replace('%', '').trim();
+                        if (val !== '' && isNaN(Number(val))) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // Función auxiliar para determinar si una columna es de fechas (formato DD/MM/YYYY)
+            function checkIsDate(colIdx) {
+                const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+                for (let i = 0; i < originalRows.length; i++) {
+                    const cell = originalRows[i].cells[colIdx];
+                    if (cell) {
+                        const val = cell.textContent.trim();
+                        if (val !== '' && !dateRegex.test(val)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            headers.forEach((th, colIndex) => {
+                const uniqueValues = new Set();
+                originalRows.forEach(row => {
+                    const cell = row.cells[colIndex];
+                    if (cell) {
+                        uniqueValues.add(cell.textContent.trim());
+                    }
+                });
+                
+                if (uniqueValues.size <= 1) return;
+                
+                const isDate = checkIsDate(colIndex);
+                const isNumeric = !isDate && checkIsNumeric(colIndex);
+                const originalContent = th.innerHTML;
+                th.innerHTML = '';
+                
+                const container = document.createElement('div');
+                container.className = 'filter-th-container';
+                
+                const label = document.createElement('span');
+                label.innerHTML = originalContent;
+                container.appendChild(label);
+                
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.type = 'button';
+                btn.innerHTML = `
+                    <svg style="width: 12px; height: 12px;" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                    </svg>
+                `;
+                container.appendChild(btn);
+                
+                const dropdown = document.createElement('div');
+                dropdown.className = 'filter-dropdown hidden';
+                
+                // --- SECCIÓN DE ORDENAMIENTO ---
+                const sortDiv = document.createElement('div');
+                sortDiv.className = 'flex flex-col gap-1 mb-2 pb-2 border-b border-gray-200';
+                
+                const sortAsc = document.createElement('button');
+                sortAsc.type = 'button';
+                sortAsc.className = 'text-left text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium';
+                
+                let ascText = 'Ordenar de A a Z';
+                let descText = 'Ordenar de Z a A';
+                if (isDate) {
+                    ascText = 'Ordenar de más antigua a más reciente';
+                    descText = 'Ordenar de más reciente a más antigua';
+                } else if (isNumeric) {
+                    ascText = 'Ordenar de menor a mayor';
+                    descText = 'Ordenar de mayor a menor';
+                }
+
+                sortAsc.innerHTML = `
+                    <svg style="width: 10px; height: 10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                    </svg> ${ascText}
+                `;
+                
+                const sortDesc = document.createElement('button');
+                sortDesc.type = 'button';
+                sortDesc.className = 'text-left text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 font-medium';
+                sortDesc.innerHTML = `
+                    <svg style="width: 10px; height: 10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                    </svg> ${descText}
+                `;
+                
+                sortDiv.appendChild(sortAsc);
+                sortDiv.appendChild(sortDesc);
+                dropdown.appendChild(sortDiv);
+                
+                // --- FIN SECCIÓN DE ORDENAMIENTO ---
+                
+                const searchInput = document.createElement('input');
+                searchInput.type = 'text';
+                searchInput.placeholder = 'Buscar...';
+                searchInput.className = 'filter-dropdown-search';
+                dropdown.appendChild(searchInput);
+                
+                const listContainer = document.createElement('div');
+                listContainer.className = 'filter-dropdown-list';
+                
+                const selectAllLabel = document.createElement('label');
+                selectAllLabel.className = 'filter-dropdown-item font-semibold';
+                const selectAllCheckbox = document.createElement('input');
+                selectAllCheckbox.type = 'checkbox';
+                selectAllCheckbox.checked = true;
+                selectAllLabel.appendChild(selectAllCheckbox);
+                selectAllLabel.appendChild(document.createTextNode(' (Seleccionar Todo)'));
+                listContainer.appendChild(selectAllLabel);
+                
+                const checkboxItems = [];
+                Array.from(uniqueValues).sort().forEach(val => {
+                    const itemLabel = document.createElement('label');
+                    itemLabel.className = 'filter-dropdown-item';
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = val;
+                    cb.checked = true;
+                    
+                    itemLabel.appendChild(cb);
+                    itemLabel.appendChild(document.createTextNode(val));
+                    listContainer.appendChild(itemLabel);
+                    
+                    checkboxItems.push({ element: itemLabel, checkbox: cb, value: val });
+                });
+                dropdown.appendChild(listContainer);
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'filter-dropdown-actions';
+                
+                const acceptBtn = document.createElement('button');
+                acceptBtn.type = 'button';
+                acceptBtn.className = 'filter-dropdown-btn filter-dropdown-btn-primary';
+                acceptBtn.textContent = 'Aceptar';
+                
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'filter-dropdown-btn filter-dropdown-btn-secondary';
+                cancelBtn.textContent = 'Limpiar';
+                
+                actionsDiv.appendChild(acceptBtn);
+                actionsDiv.appendChild(cancelBtn);
+                dropdown.appendChild(actionsDiv);
+                
+                container.appendChild(dropdown);
+                th.appendChild(container);
+                
+                // Logica de ordenar
+                function sortTable(direction) {
+                    const currentRows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+                        const firstCell = row.cells[0];
+                        return firstCell && !firstCell.textContent.trim().toUpperCase().includes('TOTAL');
+                    });
+                    
+                    const totalRow = Array.from(tbody.querySelectorAll('tr')).find(row => {
+                        const firstCell = row.cells[0];
+                        return firstCell && firstCell.textContent.trim().toUpperCase().includes('TOTAL');
+                    });
+                    
+                    currentRows.sort((a, b) => {
+                        let aVal = a.cells[colIndex] ? a.cells[colIndex].textContent.trim() : '';
+                        let bVal = b.cells[colIndex] ? b.cells[colIndex].textContent.trim() : '';
+                        
+                        if (isDate) {
+                            const parse = (str) => {
+                                const parts = str.split('/');
+                                return parts.length === 3 ? new Date(parts[2], parts[1] - 1, parts[0]) : new Date(0);
+                            };
+                            return direction === 'asc' ? parse(aVal) - parse(bVal) : parse(bVal) - parse(aVal);
+                        } else if (isNumeric) {
+                            aVal = parseFloat(aVal.replace('%', '').trim()) || 0;
+                            bVal = parseFloat(bVal.replace('%', '').trim()) || 0;
+                            return direction === 'asc' ? aVal - bVal : bVal - aVal;
+                        } else {
+                            return direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                        }
+                    });
+                    
+                    currentRows.forEach(row => tbody.appendChild(row));
+                    if (totalRow) {
+                        tbody.appendChild(totalRow);
+                    }
+                    dropdown.classList.add('hidden');
+                }
+                
+                sortAsc.addEventListener('click', () => sortTable('asc'));
+                sortDesc.addEventListener('click', () => sortTable('desc'));
+                
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.filter-dropdown').forEach(d => {
+                        if (d !== dropdown) d.classList.add('hidden');
+                    });
+                    dropdown.classList.toggle('hidden');
+                    if (!dropdown.classList.contains('hidden')) {
+                        searchInput.focus();
+                    }
+                });
+                
+                dropdown.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+                
+                searchInput.addEventListener('input', () => {
+                    const q = searchInput.value.toLowerCase();
+                    checkboxItems.forEach(item => {
+                        if (item.value.toLowerCase().includes(q)) {
+                            item.element.style.display = '';
+                        } else {
+                            item.element.style.display = 'none';
+                        }
+                    });
+                });
+                
+                selectAllCheckbox.addEventListener('change', () => {
+                    const checked = selectAllCheckbox.checked;
+                    checkboxItems.forEach(item => {
+                        if (item.element.style.display !== 'none') {
+                            item.checkbox.checked = checked;
+                        }
+                    });
+                });
+                
+                acceptBtn.addEventListener('click', () => {
+                    const selectedValues = new Set();
+                    let allChecked = true;
+                    checkboxItems.forEach(item => {
+                        if (item.checkbox.checked) {
+                            selectedValues.add(item.value);
+                        } else {
+                            allChecked = false;
+                        }
+                    });
+                    
+                    if (allChecked) {
+                        delete activeFilters[colIndex];
+                        btn.classList.remove('active');
+                    } else {
+                        activeFilters[colIndex] = selectedValues;
+                        btn.classList.add('active');
+                    }
+                    
+                    dropdown.classList.add('hidden');
+                    applyFilters();
+                });
+                
+                cancelBtn.addEventListener('click', () => {
+                    checkboxItems.forEach(item => {
+                        item.checkbox.checked = true;
+                    });
+                    selectAllCheckbox.checked = true;
+                    delete activeFilters[colIndex];
+                    btn.classList.remove('active');
+                    dropdown.classList.add('hidden');
+                    applyFilters();
+                });
+            });
+            
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.filter-dropdown').forEach(d => {
+                    d.classList.add('hidden');
+                });
+            });
+            
+            function applyFilters() {
+                const currentRows = Array.from(tbody.querySelectorAll('tr')).filter(row => {
+                    const firstCell = row.cells[0];
+                    return firstCell && !firstCell.textContent.trim().toUpperCase().includes('TOTAL');
+                });
+                
+                currentRows.forEach(row => {
+                    let keepRow = true;
+                    
+                    for (const colIndex in activeFilters) {
+                        const cell = row.cells[colIndex];
+                        if (cell) {
+                            const cellVal = cell.textContent.trim();
+                            const allowedValues = activeFilters[colIndex];
+                            if (!allowedValues.has(cellVal)) {
+                                keepRow = false;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (keepRow) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        initExcelFilters('tablaExcel1');
+
+        // Funcionalidad del Calendario Mensual de Visitas Consecutivas
+        function initCalendar() {
+            const table = document.getElementById('tablaExcel1');
+            if (!table) return;
+
+            const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => {
+                const firstCell = row.cells[0];
+                return firstCell && !firstCell.textContent.trim().toUpperCase().includes('TOTAL');
+            });
+
+            const visits = [];
+            rows.forEach(row => {
+                const cells = row.cells;
+                if (cells.length >= 6) {
+                    const area = cells[0].textContent.trim();
+                    const dateStr = cells[2].textContent.trim();
+                    const total = cells[3].textContent.trim();
+                    const atendido = cells[4].textContent.trim();
+                    const pendiente = cells[5].textContent.trim();
+
+                    // Intentar extraer el or_map del enlace del estatus pendiente
+                    let orMap = '';
+                    const link = cells[5].querySelector('a');
+                    if (link) {
+                        const href = link.getAttribute('href') || '';
+                        const match = href.match(/filtro=OR%20([^&]+)/);
+                        if (match) {
+                            orMap = decodeURIComponent(match[1]);
+                        }
+                    }
+                    if (area.toLowerCase().includes('estado de méxico') || area.toLowerCase().includes('edomex') || orMap.toLowerCase().includes('edom')) {
+                        orMap = 'EDOMEX';
+                    }
+                    if (!orMap) {
+                        orMap = area.substring(0, 4) + '.';
+                    }
+
+                    if (dateStr && dateStr.includes('/')) {
+                        const parts = dateStr.split('/');
+                        const day = parseInt(parts[0], 10);
+                        const month = parseInt(parts[1], 10) - 1;
+                        const year = parseInt(parts[2], 10);
+                        const dateObj = new Date(year, month, day);
+
+                        visits.push({
+                            area,
+                            orMap,
+                            dateStr,
+                            dateObj,
+                            day,
+                            month,
+                            year,
+                            total,
+                            atendido,
+                            pendiente
+                        });
+                    }
+                }
+            });
+
+            // Ordenar visitas de la más antigua (primera) a la más nueva (última)
+            visits.sort((a, b) => a.dateObj - b.dateObj);
+
+            if (visits.length === 0) return;
+
+            const monthNames = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+
+            const gridContenedor = document.getElementById('calendarios-grid-contenedor');
+            gridContenedor.innerHTML = ''; // Limpiar
+
+            // Obtener límites del rango de meses
+            const firstVisit = visits[0];
+            const lastVisit = visits[visits.length - 1];
+
+            let currYear = firstVisit.year;
+            let currMonth = firstVisit.month;
+            const endYear = lastVisit.year;
+            const endMonth = lastVisit.month;
+
+            const monthsToRender = [];
+            while (currYear < endYear || (currYear === endYear && currMonth <= endMonth)) {
+                monthsToRender.push({ year: currYear, month: currMonth });
+                currMonth++;
+                if (currMonth > 11) {
+                    currMonth = 0;
+                    currYear++;
+                }
+            }
+
+            // Renderizar cada mes
+            monthsToRender.forEach(({ year, month }) => {
+                const monthContainer = document.createElement('div');
+                monthContainer.className = 'bg-gray-50 border border-gray-200 p-4 rounded-2xl flex flex-col';
+
+                // Título del Mes
+                const monthTitle = document.createElement('h3');
+                monthTitle.className = 'text-sm font-bold text-center text-gray-700 mb-3';
+                monthTitle.textContent = `${monthNames[month]} ${year}`;
+                monthContainer.appendChild(monthTitle);
+
+                // Días de la semana abreviados
+                const weekHeaders = document.createElement('div');
+                weekHeaders.className = 'grid grid-cols-7 gap-1 text-center font-bold text-gray-400 text-[10px] uppercase mb-1';
+                ['D', 'L', 'M', 'M', 'J', 'V', 'S'].forEach(d => {
+                    const el = document.createElement('div');
+                    el.textContent = d;
+                    weekHeaders.appendChild(el);
+                });
+                monthContainer.appendChild(weekHeaders);
+
+                // Cuadrícula de días
+                const daysGrid = document.createElement('div');
+                daysGrid.className = 'grid grid-cols-7 gap-1';
+
+                const firstDayIdx = new Date(year, month, 1).getDay();
+                const totalDays = new Date(year, month + 1, 0).getDate();
+
+                // Relleno mes anterior
+                for (let i = 0; i < firstDayIdx; i++) {
+                    const emptyCell = document.createElement('div');
+                    emptyCell.className = 'calendar-day-box empty';
+                    daysGrid.appendChild(emptyCell);
+                }
+
+                // Días del mes
+                for (let day = 1; day <= totalDays; day++) {
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'calendar-day-box';
+
+                    const dayNum = document.createElement('span');
+                    dayNum.className = 'calendar-day-number';
+                    dayNum.textContent = day;
+                    dayCell.appendChild(dayNum);
+
+                    // Filtrar visitas de este día
+                    const dayVisits = visits.filter(v => v.year === year && v.month === month && v.day === day);
+                    if (dayVisits.length > 0) {
+                        dayCell.classList.add('has-visit');
+                        const noteList = document.createElement('div');
+                        noteList.className = 'calendar-note-list';
+
+                        dayVisits.forEach(v => {
+                            const note = document.createElement('span');
+                            note.className = 'calendar-note';
+                            note.title = `${v.area}: ${v.total} Acuerdos (${v.atendido} Atendidos, ${v.pendiente} Pendientes)`;
+                            note.textContent = `${v.orMap}`;
+                            noteList.appendChild(note);
+                        });
+                        dayCell.appendChild(noteList);
+                    }
+
+                    // Resaltar día actual
+                    const today = new Date();
+                    if (today.getDate() === day && today.getMonth() === month && today.getFullYear() === year) {
+                        dayCell.classList.add('today');
+                    }
+
+                    daysGrid.appendChild(dayCell);
+                }
+
+                monthContainer.appendChild(daysGrid);
+                gridContenedor.appendChild(monthContainer);
+            });
+
+            // Botón de imprimir PDF
+            const printBtn = document.getElementById('btn-print-calendar');
+            if (printBtn) {
+                printBtn.addEventListener('click', () => {
+                    window.print();
+                });
+            }
+        }
+
+        initCalendar();
     </script>
 
     <script src="{% static 'js/d3.js' %}" defer></script>

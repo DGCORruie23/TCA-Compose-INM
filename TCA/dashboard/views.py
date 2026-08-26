@@ -351,7 +351,9 @@ def crear_registro(request):
             registro = registro_form.save()
 
             areas2 = registro_form.cleaned_data['accion1_area2']
-            area = registro_form.cleaned_data['area']
+            selected_ors = [a for a in areas2 if a.idArea <= 32]
+            registro.area.set(selected_ors)
+            
             claveA = registro_form.cleaned_data['claveAcuerdo']
 
             accion = Acciones.objects.create(
@@ -363,7 +365,8 @@ def crear_registro(request):
             accion.save()
             registro.accionR.add(accion)
 
-            mensaje = f"Se ha creado un nuevo acuerdo: {claveA} en la {area[0].name}."
+            or_name = selected_ors[0].name if selected_ors else "Oficina sin especificar"
+            mensaje = f"Se ha creado un nuevo acuerdo: {claveA} en la {or_name}."
             generarNotificacion(registro.idRegistro, mensaje, userDataI.idUser)
 
             return redirect('dashboard')
@@ -387,12 +390,22 @@ def editar_registro(request, id):
 
         if registro_form.is_valid() and accion_form.is_valid():
             # print(accion_form)
-            if registro.estado == 1:
-                registro.fecha_finalizacion = "1970-01-01"
-            else:
+            registro = registro_form.save(commit=False)
+            if registro.porcentaje_avance == 100:
+                registro.estado = "2"
                 registro.fecha_finalizacion = datetime.now().strftime("%Y-%m-%d")
-            registro = registro_form.save()
+            else:
+                registro.estado = "1"
+                registro.fecha_finalizacion = "1970-01-01"
+            registro.save()
+            registro_form.save_m2m()
+            
             accion = accion_form.save()
+            
+            areas2 = accion_form.cleaned_data['area2']
+            selected_ors = [a for a in areas2 if a.idArea <= 32]
+            registro.area.set(selected_ors)
+            
             accion.registro = registro
             accion.save()
 
@@ -838,4 +851,36 @@ def generarNotificacion(idRegistro, mensaje, idUser):
         #     }
         # )
         # print(notifi, created)
+
+
+@login_required
+def actualizar_avance(request, registro_id):
+    if request.method == 'POST':
+        registro = get_object_or_404(Registro, pk=registro_id)
+        nuevo_avance = request.POST.get('porcentaje_avance')
+        
+        try:
+            nuevo_avance = int(nuevo_avance)
+            if nuevo_avance < 0 or nuevo_avance > 100:
+                messages.error(request, "El porcentaje de avance debe estar entre 0 y 100.")
+                return redirect('detalles', registro_id=registro_id)
+            
+            registro.porcentaje_avance = nuevo_avance
+            userDataI = UsuarioP.objects.filter(user__username=request.user).first()
+            if nuevo_avance == 100:
+                registro.estado = "2"
+                registro.fecha_finalizacion = datetime.now().strftime("%Y-%m-%d")
+                mensaje_notif = f"Se ha atendido el acuerdo: {registro.claveAcuerdo}."
+                generarNotificacion(registro.idRegistro, mensaje_notif, userDataI.idUser)
+                messages.success(request, f"Se ha atendido el acuerdo: {registro.claveAcuerdo}.")
+            else:
+                registro.estado = "1"
+                registro.fecha_finalizacion = "1970-01-01"
+                messages.success(request, "Porcentaje de avance actualizado correctamente.")
+                
+            registro.save()
+        except ValueError:
+            messages.error(request, "Porcentaje de avance inválido.")
+            
+    return redirect('detalles', registro_id=registro_id)
 

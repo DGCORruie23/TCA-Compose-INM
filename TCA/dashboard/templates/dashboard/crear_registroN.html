@@ -169,7 +169,7 @@
                                 <div class="flex flex-col space-y-2">
                                     <label for="id_rubro">Rubro:</label>
                                 
-                                        <select name="rubro" size="6" required id="id_rubro" multiple>
+                                        <select name="rubro" size="8" required id="id_rubro" multiple>
                                             {% for area in registro_form.fields.rubro.queryset %}
                                                 <option value="{{ area.pk }}"
                                                     {% if area.pk in registro_form.initial.rubro %} selected{% endif %}>
@@ -180,42 +180,17 @@
                                 </div>
                             </div>
 
-                            <div class="px-2 flex-1 text-center">
-                                <div class="flex flex-col space-y-2">
-                                    <label for="id_periodo">Periodo:</label>
-                                
-                                        <select name="periodo" size="3" required id="id_periodo" multiple>
-                                            {% for areass in registro_form.fields.periodo.queryset %}
-                                                <option value="{{ areass.pk }}"
-                                                    {% if areass.pk in registro_form.initial.periodo %} selected{% endif %}>
-                                                    {{ areass.pk }}, {{ areass.desc }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                </div>
-                            </div>
+                            {{ registro_form.periodo }}
         
                         </div>
                         <div class="flex-1 text-center">
                             <div class="flex-1 text-center">
         
-                                <div class="px-2 flex flex-col space-y-2">
-                                    <label for="id_area">OR:</label>
-                                    <select name="area" size="7" required id="id_area" multiple>
-                                        {% for areass in registro_form.fields.area.queryset %}
-                                            {% if areass.pk < 33 %}
-                                                <option value="{{ areass.pk }}"
-                                                    {% if areass.pk in registro_form.initial.area %} selected{% endif %}>
-                                                    {{ areass.pk }}, {{ areass.nickname }}
-                                                </option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
-                                </div>
+
         
                                 <div class="px-2 py-10 flex flex-col space-y-2">
                                     <label for="id_accion1_area2">Áreas Responsables:</label>
-                                    <select name="accion1_area2" size="7" required id="id_accion1_area2" multiple>
+                                    <select name="accion1_area2" size="8" required id="id_accion1_area2" multiple>
                                         {% for areass in registro_form.fields.accion1_area2.queryset %}
                                             <option value="{{ areass.pk }}"
                                                 {% if areass.pk in registro_form.initial.accion1_area2 %} selected{% endif %}>

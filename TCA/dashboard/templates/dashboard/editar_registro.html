@@ -212,22 +212,14 @@
                                 </div>
                             </div>
 
-                            <div class="px-2 flex-1 text-center">
-                                <div class="flex flex-col space-y-2">
-                                    <label for="{{ registro_form.periodo.id_for_label }}">Periodo:</label>
-                                    {{ registro_form.periodo }}
-                                </div>
-                            </div>
+                            {{ registro_form.periodo }}
         
                         </div>
                         
                         <div class="flex-1 text-center">
                             <div class="flex-1 text-center">
         
-                                <div class="px-2 flex flex-col space-y-2">
-                                    <label for="{{ registro_form.area.id_for_label }}">OR:</label>
-                                    {{ registro_form.area }}
-                                </div>
+
         
                                 <div class="px-2 py-10 flex flex-col space-y-2">
                                     <label for="{{ accion_form.area2.id_for_label }}">Áreas Responsables:</label>
@@ -241,11 +233,7 @@
                                 {{ registro_form.porcentaje_avance }}
                             </div>
                             
-                            
-                            <div class="px-2 flex flex-col space-y-2">
-                                <label for="{{ registro_form.estado.id_for_label }}">Estatus:</label>
-                                {{ registro_form.estado }}
-                            </div>
+                            {{ registro_form.estado }}
                         </div>
                         <div class="flex-1 text-center">
 

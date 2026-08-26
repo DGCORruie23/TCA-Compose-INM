@@ -212,3 +212,49 @@ def pendientes(request):
     
     else:
         return render(request, "base/error404.html")
+
+@login_required
+def acuerdosAll(request):
+    if(request.method == "GET"):
+
+        opc = [str(a.pk) for a in Periodo.objects.all() ]
+        userDataI = UsuarioP.objects.filter(user__username=request.user).first()
+        seleccion = request.GET.get('periodo')
+
+        registros = Registro.objects.filter(area=userDataI.OR).order_by('fecha_inicio')
+        if seleccion in opc:
+            registros = registros.filter(periodo__id=int(seleccion))
+
+        if userDataI.tipo == "1":
+            registros = Registro.objects.all().order_by('fecha_inicio')
+            if seleccion in opc:
+                registros = registros.filter(periodo__id=int(seleccion))
+        
+        workbook = opxl.Workbook()
+        worksheet = workbook.active
+            
+        for valor in registros:
+
+            oficina = valor.claveAcuerdo.split("/")
+            fecha = valor.fecha_inicio.strftime("%Y")
+            clave = valor.claveAcuerdo
+            rubro = (valor.rubro.first()).tipo
+            hallazgo = (valor.accionR.first()).antecedente
+            descripcion = (valor.accionR.first()).descripcion
+            avance = valor.porcentaje_avance
+
+            areas1 = ", ".join([area.nickname for area in (valor.accionR.first()).area2.all()])
+
+            worksheet.append([oficina[1], fecha, clave, rubro, hallazgo, descripcion, avance, areas1])
+        
+        worksheet.append(['Numero de Acuerdos Pendientes: ', registros.count()])
+
+        response = HttpResponse(content = opxl.writer.excel.save_virtual_workbook(workbook), content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename= "Acuerdos_Totales_a_{fecha1}.xlsx"'.format(fecha1 = date.today())
+
+        return response
+
+        # redirect("estadistica_p")
+    
+    else:
+        return render(request, "base/error404.html")

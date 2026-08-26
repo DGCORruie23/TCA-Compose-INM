@@ -1,5 +1,5 @@
 from django import forms
-from usuarios.models import Registro, Acciones,  Area, Mensaje
+from usuarios.models import Registro, Acciones, Area, Mensaje, Periodo, Rubro
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 import re
@@ -8,32 +8,45 @@ from datetime import datetime
 class RegistroConAccionesYPruebasForm(forms.ModelForm):
     class Meta:
         model = Registro
-        fields = ['claveAcuerdo','fecha_inicio', 'fecha_termino', 'rubro', 'area', 'periodo',]
-        labels = {
-            'area': 'OR',
-        }    
+        fields = ['claveAcuerdo','fecha_inicio', 'fecha_termino', 'rubro', 'periodo',]
+        widgets = {
+            'periodo': forms.HiddenInput(),
+        }
 
     accion1_area2 = forms.ModelMultipleChoiceField(queryset=Area.objects.all(), label="Áreas Responsables")
     accion1_descripcion = forms.CharField(widget=forms.Textarea, label="Descripción")
     accion1_antecedente = forms.CharField(widget=forms.Textarea, label="Antecedente")
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['area'].queryset = Area.objects.filter(idArea__lte=32) 
+        from django.db.models.functions import Lower
+        self.fields['rubro'].queryset = Rubro.objects.all().order_by(Lower('tipo'))
+        newest_period = Periodo.objects.order_by('-id').first()
+        if newest_period and not self.instance.pk:
+            self.fields['periodo'].initial = newest_period
 
 class RegistroConAccionesFORM(forms.ModelForm):
     class Meta:
         model = Registro
-        fields = ['claveAcuerdo', 'fecha_inicio', 'fecha_termino', 'rubro', 'area', 'estado', 'porcentaje_avance', 'periodo',]
+        fields = ['claveAcuerdo', 'fecha_inicio', 'fecha_termino', 'rubro', 'estado', 'porcentaje_avance', 'periodo',]
+        widgets = {
+            'periodo': forms.HiddenInput(),
+            'estado': forms.HiddenInput(),
+            'porcentaje_avance': forms.NumberInput(attrs={'min': 0, 'max': 100}),
+            'rubro': forms.SelectMultiple(attrs={'size': 8}),
+        }
         labels = {
             'claveAcuerdo': 'Clave de Acuerdo',
-            'area': 'OR',
             'estado': 'Estatus',
             'porcentaje_avance': 'Porcentaje de Avance'
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['area'].queryset = Area.objects.filter(idArea__lte=32)
+        from django.db.models.functions import Lower
+        self.fields['rubro'].queryset = Rubro.objects.all().order_by(Lower('tipo'))
+        newest_period = Periodo.objects.order_by('-id').first()
+        if newest_period and not self.instance.pk:
+            self.fields['periodo'].initial = newest_period
         self.fields['porcentaje_avance'].validators.extend([MaxValueValidator(100), MinValueValidator(0)])
 
     def clean_claveAcuerdo(self):
@@ -95,6 +108,7 @@ class AccionesForm(forms.ModelForm):
             'area2': 'Áreas Responsables',
         }
         widgets = {
+            'area2': forms.SelectMultiple(attrs={'size': 8}),
             'antecedente': forms.Textarea(attrs={
                 'cols': 30,
                 'rows': 7,
