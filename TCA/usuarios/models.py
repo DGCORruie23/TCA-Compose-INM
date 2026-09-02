@@ -36,6 +36,16 @@ class Periodo(models.Model):
     def __str__(self):
         return f"{self.id}, {self.desc}"
 
+class TipoVisita(models.Model):
+    tipo = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.id}, {self.tipo}"
+
+    class Meta:
+            verbose_name = "Tipo Visita"
+            verbose_name_plural = "Tipos de Visita"
+
 
 class Registro(models.Model):
     types_estado = [
@@ -54,6 +64,7 @@ class Registro(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     porcentaje_avance = models.IntegerField(default=0)
     periodo = models.ForeignKey(Periodo, on_delete=models.CASCADE, null=True)
+    tipo_visita = models.ForeignKey(TipoVisita, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         # return f"hola"

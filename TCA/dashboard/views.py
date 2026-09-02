@@ -227,8 +227,6 @@ def dashboard(request):
             return render(request, "dashboard/dashboard_m.html", context)
         else:
             return render(request, "dashboard/dashboard.html", context)
-            # template = 'home_pc.html'
-        return render(request, template)
 
         # return render(request, "dashboard/dashboard.html", context)
 
@@ -560,7 +558,7 @@ def cargaMasiva(request):
 
                         try:
                             accionesB = Acciones.objects.get(idRegistro=registro)
-                            accionesB.area2.aclear()
+                            accionesB.area2.clear()
                             accionesB.descripcion = descripcionAux
                             for area in areas_objs:
                                 accionesB.area2.add(area)
