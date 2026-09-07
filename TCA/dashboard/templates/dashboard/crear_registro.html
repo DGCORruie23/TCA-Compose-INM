@@ -200,7 +200,7 @@
                             <div class="flex-1 text-center">
         
 
-                                <div class="px-2 py-10 flex flex-col space-y-2">
+                                <div class="px-2 py-4 flex flex-col space-y-2">
                                     <label for="id_accion1_area2">Áreas Responsables:</label>
                                     <select name="accion1_area2" size="8" required id="id_accion1_area2" multiple>
                                         {% for areass in registro_form.fields.accion1_area2.queryset %}
@@ -212,6 +212,18 @@
                                     </select>
                                 </div>
         
+                                <div class="px-2 flex flex-col space-y-2">
+                                    <label for="id_tipo_visita">Tipo de Visita:</label>
+                                    <select name="tipo_visita" id="id_tipo_visita">
+                                        <option value="">-- Seleccione Tipo de Visita --</option>
+                                        {% for tv in registro_form.fields.tipo_visita.queryset %}
+                                            <option value="{{ tv.pk }}"
+                                                {% if registro_form.tipo_visita.value == tv.pk or registro_form.tipo_visita.value|add:0 == tv.pk or not registro_form.tipo_visita.value and tv.pk == 1 %} selected{% endif %}>
+                                                {{ tv.tipo }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
         
                             </div>
                         </div>

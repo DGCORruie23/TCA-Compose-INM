@@ -1,5 +1,5 @@
 from django import forms
-from usuarios.models import Registro, Acciones, Area, Mensaje, Periodo, Rubro
+from usuarios.models import Registro, Acciones, Area, Mensaje, Periodo, Rubro, TipoVisita
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.core.exceptions import ValidationError
 import re
@@ -8,9 +8,10 @@ from datetime import datetime
 class RegistroConAccionesYPruebasForm(forms.ModelForm):
     class Meta:
         model = Registro
-        fields = ['claveAcuerdo','fecha_inicio', 'fecha_termino', 'rubro', 'periodo',]
+        fields = ['claveAcuerdo','fecha_inicio', 'fecha_termino', 'rubro', 'periodo', 'tipo_visita']
         widgets = {
             'periodo': forms.HiddenInput(),
+            'tipo_visita': forms.Select(attrs={'class': 'w-full p-2 border rounded-md'}),
         }
 
     accion1_area2 = forms.ModelMultipleChoiceField(queryset=Area.objects.all(), label="Áreas Responsables")
@@ -20,6 +21,10 @@ class RegistroConAccionesYPruebasForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         from django.db.models.functions import Lower
         self.fields['rubro'].queryset = Rubro.objects.all().order_by(Lower('tipo'))
+        self.fields['tipo_visita'].queryset = TipoVisita.objects.all()
+        self.fields['tipo_visita'].empty_label = "Seleccione Tipo de Visita"
+        if not self.instance.pk and 'tipo_visita' in self.fields:
+            self.fields['tipo_visita'].initial = 1
         newest_period = Periodo.objects.order_by('-id').first()
         if newest_period and not self.instance.pk:
             self.fields['periodo'].initial = newest_period
@@ -27,23 +32,29 @@ class RegistroConAccionesYPruebasForm(forms.ModelForm):
 class RegistroConAccionesFORM(forms.ModelForm):
     class Meta:
         model = Registro
-        fields = ['claveAcuerdo', 'fecha_inicio', 'fecha_termino', 'rubro', 'estado', 'porcentaje_avance', 'periodo',]
+        fields = ['claveAcuerdo', 'fecha_inicio', 'fecha_termino', 'rubro', 'estado', 'porcentaje_avance', 'periodo', 'tipo_visita']
         widgets = {
             'periodo': forms.HiddenInput(),
             'estado': forms.HiddenInput(),
             'porcentaje_avance': forms.NumberInput(attrs={'min': 0, 'max': 100}),
             'rubro': forms.SelectMultiple(attrs={'size': 8}),
+            'tipo_visita': forms.Select(attrs={'class': 'w-full p-2 border rounded-md'}),
         }
         labels = {
             'claveAcuerdo': 'Clave de Acuerdo',
             'estado': 'Estatus',
-            'porcentaje_avance': 'Porcentaje de Avance'
+            'porcentaje_avance': 'Porcentaje de Avance',
+            'tipo_visita': 'Tipo de Visita',
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         from django.db.models.functions import Lower
         self.fields['rubro'].queryset = Rubro.objects.all().order_by(Lower('tipo'))
+        self.fields['tipo_visita'].queryset = TipoVisita.objects.all()
+        self.fields['tipo_visita'].empty_label = "Seleccione Tipo de Visita"
+        if not self.instance.pk and 'tipo_visita' in self.fields:
+            self.fields['tipo_visita'].initial = 1
         newest_period = Periodo.objects.order_by('-id').first()
         if newest_period and not self.instance.pk:
             self.fields['periodo'].initial = newest_period

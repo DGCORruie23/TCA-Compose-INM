@@ -34,6 +34,9 @@ RUN mkdir /src/TCA/data/media
 
 #Copiar los requisitos del sistema
 # COPY ./req.txt ./
+#instalar herramientas de compilacion antes para evitar timeouts
+RUN pip install --upgrade setuptools wheel
+
 #instalar dependencias 
 RUN pip install -r req.txt
 

@@ -271,6 +271,13 @@
 {% endif %}
 <br>
 <center>
+    <p class="w-1/2 px-2"> <b class="text-black">Visita</b> 
+        {% if registro.tipo_visita.id > 1 %}
+        <span class="text-inm-rojo-100 font-bold">Remota</span>
+        {% else %}
+        <span class="text-inm-verde-100 font-bold">Presencial</span>
+        {% endif %}
+    </p>
     <p class="w-1/2 px-2 text-black"> <b>Descripción:</b> {{ registro.accionR.all.first.descripcion }}</p>
     <p class="w-1/2 px-2 text-black"> <b>Hallazgo(s):</b> {{ registro.accionR.all.first.antecedente }}</p>
 </center>

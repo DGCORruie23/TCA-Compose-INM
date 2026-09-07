@@ -19,19 +19,35 @@
         {% comment %} <h1 class="text-3xl font-bold text-gray-700">Acuerdos: <strong>{{ acuerdos }} </strong></h1> {% endcomment %}
             <form method="post" action="{% url 'estadistica_p'%}">
                 {% csrf_token %}
-                <div class="flex flex-col justify-center items-center space-y-8">
-                <select name="periodo" size="3" required>
-                    {% for area in periodo_form %}
-                        <option value="{{ area.pk }}">
-                            {{ area.pk }}.- {{ area.desc }}
-                        </option>
-                    {% endfor %}
-                    <option value="all">
-                        Todos los periodos
-                    </option>
-                </select>
-                <button class="py-3 px-6 mx-1 bg-inm-marron-200 hover:bg-inm-marron-100 rounded-xl text-white">Seleccionar periodo</button>
-            </div>
+                <div class="flex flex-col justify-center items-center space-y-6">
+                    <div class="flex flex-col items-center space-y-2">
+                        <label class="font-bold text-gray-700">Periodo:</label>
+                        <select name="periodo" size="3" class="border rounded p-2" required>
+                            {% for area in periodo_form %}
+                                <option value="{{ area.pk }}">
+                                    {{ area.pk }}.- {{ area.desc }}
+                                </option>
+                            {% endfor %}
+                            <option value="all">
+                                Todos los periodos
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col items-center space-y-2">
+                        <label class="font-bold text-gray-700">Tipo de Visita:</label>
+                        <select name="tipo_visita" class="border rounded p-2 text-black bg-white w-64">
+                            <option value="all">Todos los tipos de visita</option>
+                            {% for tv in tipo_visita_form %}
+                                <option value="{{ tv.pk }}">
+                                    {{ tv.tipo }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button class="py-3 px-6 mx-1 bg-inm-marron-200 hover:bg-inm-marron-100 rounded-xl text-white">Seleccionar periodo</button>
+                </div>
             </form>
 
     </div>

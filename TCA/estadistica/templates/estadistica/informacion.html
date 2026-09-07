@@ -449,6 +449,7 @@
                 <thead>
                     <tr class="">
                         <th class="bg-black border border-gray-300 px-4 py-2 text text-center">ORs</th>
+                        <th class="bg-gray-500 border border-gray-300 px-4 py-2 text-center">Tipo de Visita</th>
                         <th class="bg-gray-500 border border-gray-300 px-4 py-2 text-center"># Visitas</th>
                         <th class="bg-black border border-gray-300 px-4 py-2 text">Fechas</th>
                         <th class="bg-gray-500 border border-gray-300 px-4 py-2 text-center"># Acuerdos</th>
@@ -462,6 +463,13 @@
                     {% for dato in tabla1 %}
                     <tr>
                         <td class="border border-gray-300 px-4 py-2 text-center">{{ dato.area }}</td>
+                        <td class="border border-gray-300 px-4 py-2 text-center">
+                            {% if dato.tipo_visita_id == 1 %}
+                            <span class="text-green-600 font-bold" style="color: #16a34a;">{{ dato.tipo_visita_nombre }}</span>
+                            {% else %}
+                            <span class="text-red-600 font-bold" style="color: #dc2626;">{{ dato.tipo_visita_nombre }}</span>
+                            {% endif %}
+                        </td>
                         <td class="border border-gray-300 px-4 py-2 text-center">1</td>
                         <td class="border border-gray-300 px-4 py-2 text-center">{{ dato.fecha }}</td>
                         <td class="border border-gray-300 px-4 py-2 text-center">{{ dato.total }}</td>
@@ -858,6 +866,7 @@
                         tbody.appendChild(totalRow);
                     }
                     dropdown.classList.add('hidden');
+                    initCalendar();
                 }
                 
                 sortAsc.addEventListener('click', () => sortTable('asc'));
@@ -966,6 +975,7 @@
                         row.style.display = 'none';
                     }
                 });
+                initCalendar();
             }
         }
 
@@ -974,26 +984,29 @@
         // Funcionalidad del Calendario Mensual de Visitas Consecutivas
         function initCalendar() {
             const table = document.getElementById('tablaExcel1');
-            if (!table) return;
+            const gridContenedor = document.getElementById('calendarios-grid-contenedor');
+            if (!table || !gridContenedor) return;
 
+            // Obtener solo las filas visibles del tbody que no sean TOTAL
             const rows = Array.from(table.querySelectorAll('tbody tr')).filter(row => {
                 const firstCell = row.cells[0];
-                return firstCell && !firstCell.textContent.trim().toUpperCase().includes('TOTAL');
+                const isTotal = firstCell && firstCell.textContent.trim().toUpperCase().includes('TOTAL');
+                const isVisible = row.style.display !== 'none';
+                return firstCell && !isTotal && isVisible;
             });
 
             const visits = [];
             rows.forEach(row => {
                 const cells = row.cells;
-                if (cells.length >= 6) {
+                if (cells.length >= 7) {
                     const area = cells[0].textContent.trim();
-                    const dateStr = cells[2].textContent.trim();
-                    const total = cells[3].textContent.trim();
-                    const atendido = cells[4].textContent.trim();
-                    const pendiente = cells[5].textContent.trim();
+                    const dateStr = cells[3].textContent.trim();
+                    const total = cells[4].textContent.trim();
+                    const atendido = cells[5].textContent.trim();
+                    const pendiente = cells[6].textContent.trim();
 
-                    // Intentar extraer el or_map del enlace del estatus pendiente
                     let orMap = '';
-                    const link = cells[5].querySelector('a');
+                    const link = cells[6].querySelector('a');
                     if (link) {
                         const href = link.getAttribute('href') || '';
                         const match = href.match(/filtro=OR%20([^&]+)/);
@@ -1001,11 +1014,12 @@
                             orMap = decodeURIComponent(match[1]);
                         }
                     }
+                    if (!orMap) {
+                        // Intentar obtener una abreviatura limpia
+                        orMap = area.replace(/^OR\s+/i, '').substring(0, 5);
+                    }
                     if (area.toLowerCase().includes('estado de méxico') || area.toLowerCase().includes('edomex') || orMap.toLowerCase().includes('edom')) {
                         orMap = 'EDOMEX';
-                    }
-                    if (!orMap) {
-                        orMap = area.substring(0, 4) + '.';
                     }
 
                     if (dateStr && dateStr.includes('/')) {
@@ -1015,34 +1029,38 @@
                         const year = parseInt(parts[2], 10);
                         const dateObj = new Date(year, month, day);
 
-                        visits.push({
-                            area,
-                            orMap,
-                            dateStr,
-                            dateObj,
-                            day,
-                            month,
-                            year,
-                            total,
-                            atendido,
-                            pendiente
-                        });
+                        if (!isNaN(dateObj.getTime())) {
+                            visits.push({
+                                area,
+                                orMap,
+                                dateStr,
+                                dateObj,
+                                day,
+                                month,
+                                year,
+                                total,
+                                atendido,
+                                pendiente
+                            });
+                        }
                     }
                 }
             });
 
-            // Ordenar visitas de la más antigua (primera) a la más nueva (última)
+            // Ordenar visitas de la más antigua a la más nueva
             visits.sort((a, b) => a.dateObj - b.dateObj);
 
-            if (visits.length === 0) return;
+            gridContenedor.innerHTML = ''; // Limpiar previo
+
+            if (visits.length === 0) {
+                gridContenedor.innerHTML = '<p class="col-span-3 text-center text-gray-500 py-4">No hay visitas registradas para la selección actual.</p>';
+                return;
+            }
 
             const monthNames = [
                 'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
                 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
             ];
-
-            const gridContenedor = document.getElementById('calendarios-grid-contenedor');
-            gridContenedor.innerHTML = ''; // Limpiar
 
             // Obtener límites del rango de meses
             const firstVisit = visits[0];

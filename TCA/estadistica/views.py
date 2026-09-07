@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from usuarios.models import Registro, Acciones, Notificacion, Area, Rubro, UsuarioP, Periodo
+from usuarios.models import Registro, Acciones, Notificacion, Area, Rubro, UsuarioP, Periodo, TipoVisita
 from django.db.models import Count, Q, Avg, IntegerField
 from django.db.models.functions import ExtractYear, Substr
 from django.http import HttpResponse
@@ -11,7 +11,8 @@ import openpyxl as opxl
 def opc_periodo(request):
     if request.method == 'GET':
         context = {
-            'periodo_form': Periodo.objects.all()
+            'periodo_form': Periodo.objects.all(),
+            'tipo_visita_form': TipoVisita.objects.all(),
         }
         return render(request, "estadistica/periodo.html", context)
     else:
@@ -21,9 +22,11 @@ def opc_periodo(request):
 def general(request):
     if request.method == 'POST':
         
-        opc = [str(a.pk) for a in Periodo.objects.all() ]
+        opc = [str(a.pk) for a in Periodo.objects.all()]
+        opc_tv = [str(tv.pk) for tv in TipoVisita.objects.all()]
 
         seleccion = str(request.POST.get('periodo'))
+        seleccion_tv = str(request.POST.get('tipo_visita'))
 
         if (seleccion not in opc) and (seleccion != 'all'):
             return render(request, "base/error404.html")
@@ -32,12 +35,16 @@ def general(request):
         
         registros = Registro.objects.filter(area=userDataI.OR)
         if seleccion in opc:
-            registros = Registro.objects.filter(area=userDataI.OR, periodo__id=int(seleccion))
+            registros = registros.filter(periodo__id=int(seleccion))
+        if seleccion_tv in opc_tv:
+            registros = registros.filter(tipo_visita__id=int(seleccion_tv))
 
         if userDataI.tipo == "1":
             registros = Registro.objects.all()
             if seleccion in opc:
-                registros = Registro.objects.filter(periodo__id=int(seleccion))
+                registros = registros.filter(periodo__id=int(seleccion))
+            if seleccion_tv in opc_tv:
+                registros = registros.filter(tipo_visita__id=int(seleccion_tv))
         
         consultarAreas = Area.objects.all()
         consultarRubros = Rubro.objects.all()
@@ -63,8 +70,7 @@ def general(request):
 
 
         #Tabla 1
-        # registros_visitas = registros.values('area', 'fecha_inicio').annotate(total= Count('idRegistro'), ).order_by('area', 'fecha_inicio')
-        registros_visitas = registros.values('area', 'fecha_inicio').annotate(
+        registros_visitas = registros.values('area', 'fecha_inicio', 'tipo_visita', 'tipo_visita__tipo', 'tipo_visita__id').annotate(
             total=Count('idRegistro'),
             pendiente=Count('idRegistro', filter=Q(estado="1")),
             atendido=Count('idRegistro', filter=Q(estado="2")),
@@ -84,12 +90,13 @@ def general(request):
                     'atendido': registro['atendido'],
                     'avance': registro['seguimiento'],
                     'or_map': or_map,
+                    'tipo_visita_nombre': registro['tipo_visita__tipo'] or "N/A",
+                    'tipo_visita_id': registro['tipo_visita__id'],
                     })
         
         # print(ors_mapa)
 
         for registro in registros_visitas:
-            # print(f"OR: {consultarAreas.filter(idArea=registro['area']).first().name} Fecha: {registro['fecha_inicio']} TOTAL {registro['total']}")
             area_obj = consultarAreas.filter(idArea=registro['area']).first()
             registro_V_A.append({
                 'area': str(area_obj.name).replace("OR ",""),
@@ -100,6 +107,8 @@ def general(request):
                 'or_map': str(area_obj.nickname).replace("OR ",""),
                 'fecha_iso': registro['fecha_inicio'].strftime("%Y-%m-%d"),
                 'year': registro['fecha_inicio'].year,
+                'tipo_visita_nombre': registro['tipo_visita__tipo'] or "N/A",
+                'tipo_visita_id': registro['tipo_visita__id'],
             })
 
         # registros_years = registros.values( "fecha_inicio", year=ExtractYear('fecha_inicio')).annotate(
