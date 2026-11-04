@@ -5,6 +5,6 @@ from . import views
 from django.urls import path, include
 
 urlpatterns = [
-
     path('validar/', views.login_user),
+    path('captcha/', views.captcha_image, name='captcha_image'),
 ]

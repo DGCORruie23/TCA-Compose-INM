@@ -19,7 +19,7 @@ from django.urls import path
 from django.contrib.auth import views as viewsL
 from . import views
 from django.urls import path, include
-from usuarios.views import index, pagina404
+from usuarios.views import index, pagina404, CustomLoginView
 import dashboard.views as vDash
  
 from django.conf import settings
@@ -35,7 +35,7 @@ urlpatterns = [
     path('api/', include('api.urls')),
     
     path('', index, name="index"),
-    path('log-in/', viewsL.LoginView.as_view(template_name= 'base/log_in.html'), name='log-in'),
+    path('log-in/', CustomLoginView.as_view(template_name='base/log_in.html'), name='log-in'),
     path('log-out/', viewsL.LogoutView.as_view(), name="logout"),
     path('dashboard/', vDash.dashboard ,name="dashboard" ),
     path('notificacion_leida/<int:notificacion_id>/', vDash.marcar_notificacion_leida, name='marcar_notificacion_leida'),

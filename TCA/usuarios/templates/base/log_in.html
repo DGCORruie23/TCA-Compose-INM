@@ -3,40 +3,95 @@
 {% block title %}Ingresa al sistema{% endblock title %}
 
 {% block content %}
-    {% comment %} <h1 class="text-xl">Ingresa al sistema</h1>
-
-    <form action="." method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button class="py-1 px-3 mx-2 my-2 bg-teal-500 text-white rounded-xl">Ingresar</button>
-    </form> {% endcomment %}
-
     <section class="mt-10 grow" style="color: white;">
-        <div class=" flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-full lg:py-0">
+        <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-full lg:py-0">
             <div class="bg-inm-verde-100 w-full rounded-lg shadow dark:border sm:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
                 <div class="p-6 space-y-2 md:space-y-4 sm:p-8">
                     <h1 class="text-xl font-bold leading-tight tracking-tight text-white-900 md:text-2xl dark:text-white">
                         Ingresa al sistema
                     </h1>
 
-                    <form class="space-y-4 md:space-y-6" action="." method="post">
+                    {% if is_locked_out %}
+                        <div id="lockout-alert" class="p-3 text-sm text-white bg-red-700 border border-red-400 rounded-lg" role="alert">
+                            <p class="font-semibold">Acceso bloqueado temporalmente</p>
+                            <p>Has superado los {{ max_attempts }} intentos fallidos consecutivos. Por favor espera <span id="lockout-timer" class="font-bold underline">{{ lockout_remaining }}</span> segundos para volver a intentarlo.</p>
+                        </div>
+                    {% elif login_error %}
+                        <div class="p-3 text-sm text-white bg-red-600/90 border border-red-400 rounded-lg" role="alert">
+                            {{ login_error }}
+                        </div>
+                    {% endif %}
+
+                    <form id="login-form" class="space-y-4 md:space-y-5" action="." method="post">
                         {% csrf_token %}
                         <div>
                             <label for="email" class="block mb-2 text-sm font-medium text-white-900 dark:text-white">Nombre de Usuario</label>
-                            <input name="username" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="" required="">
+                            <input name="username" id="email" value="{{ form.username.value|default:'' }}" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50" placeholder="" required="" {% if is_locked_out %}disabled{% endif %}>
                         </div>
                         <div>
                             <label for="password" class="block mb-2 text-sm font-medium text-white-900 dark:text-white">Contraseña</label>
-                            <input type="password" name="password" id="password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required="">
+                            <input type="password" name="password" id="password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50" required="" {% if is_locked_out %}disabled{% endif %}>
+                        </div>
+
+                        <div>
+                            <label for="captcha" class="block mb-2 text-sm font-medium text-white-900 dark:text-white">Código de verificación (CAPTCHA)</label>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <img id="captcha-img" src="{% url 'captcha_image' %}" alt="CAPTCHA" class="rounded-lg border border-gray-300 bg-gray-100 h-[56px] w-[190px] select-none" />
+                                <button type="button" id="refresh-captcha-btn" onclick="refreshCaptcha()" title="Generar nuevo código" class="px-3 py-2 text-xs font-medium text-white bg-gray-700 hover:bg-gray-600 rounded-lg border border-gray-500 focus:outline-none disabled:opacity-50" {% if is_locked_out %}disabled{% endif %}>
+                                    ↻ Cambiar
+                                </button>
+                            </div>
+                            <input type="text" name="captcha" id="captcha" maxlength="5" autocomplete="off" placeholder="Escribe los 5 caracteres de la imagen" class="uppercase bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 disabled:opacity-50" required="" {% if is_locked_out %}disabled{% endif %}>
                         </div>
                         
-                        <button class="w-full text-white bg-inm-rojo-200 hover:bg-inm-rojo-200 focus:ring-4 focus:outline-none focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-teal-600 dark:hover:bg-teal-700 dark:focus:ring-teal-800 hover:text-inm-marron-100">Entra</button>
+                        <button id="login-submit-btn" type="submit" class="w-full text-white bg-inm-rojo-200 hover:bg-inm-rojo-200 focus:ring-4 focus:outline-none focus:ring-teal-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-teal-600 dark:hover:bg-teal-700 dark:focus:ring-teal-800 hover:text-inm-marron-100 disabled:opacity-50 disabled:cursor-not-allowed" {% if is_locked_out %}disabled{% endif %}>
+                            Entra
+                        </button>
                     </form>
 
                 </div>
             </div>
         </div>
-      </section>
-      
-{% endblock content %}
+    </section>
 
+    <script>
+        function refreshCaptcha() {
+            const img = document.getElementById('captcha-img');
+            const input = document.getElementById('captcha');
+            if (img) {
+                img.src = "{% url 'captcha_image' %}?t=" + new Date().getTime();
+            }
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        {% if is_locked_out %}
+        (function() {
+            let remaining = parseInt("{{ lockout_remaining }}", 10) || 60;
+            const timerEl = document.getElementById('lockout-timer');
+            const alertEl = document.getElementById('lockout-alert');
+            const inputs = document.querySelectorAll('#login-form input, #login-form button');
+
+            const interval = setInterval(function() {
+                remaining -= 1;
+                if (timerEl && remaining > 0) {
+                    timerEl.textContent = remaining;
+                }
+                if (remaining <= 0) {
+                    clearInterval(interval);
+                    inputs.forEach(function(el) {
+                        el.disabled = false;
+                    });
+                    if (alertEl) {
+                        alertEl.className = "p-3 text-sm text-white bg-green-700 border border-green-400 rounded-lg";
+                        alertEl.innerHTML = "<p class='font-semibold'>Tiempo de espera finalizado. Ya puedes volver a intentarlo.</p>";
+                    }
+                    refreshCaptcha();
+                }
+            }, 1000);
+        })();
+        {% endif %}
+    </script>
+{% endblock content %}
