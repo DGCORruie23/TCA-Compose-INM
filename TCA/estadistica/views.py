@@ -113,12 +113,20 @@ def general(request):
 
         # registros_years = registros.values( "fecha_inicio", year=ExtractYear('fecha_inicio')).annotate(
         #tabla 2
-        registros_years = registros.values(year=ExtractYear('fecha_inicio')).annotate(
+        registros_years = list(registros.values(year=ExtractYear('fecha_inicio')).annotate(
             total_registros=Count('idRegistro'),
             total_fechas_unicas=Count(Substr('claveAcuerdo', 4), distinct=True),
             total_pendi=Count('idRegistro', filter=Q(estado="1")), 
             total_aten=Count('idRegistro', filter=Q(estado="2")), 
-            ).order_by('year')
+            ).order_by('year'))
+
+        visitas_por_anio = {}
+        for item in registro_V_A:
+            y = item['year']
+            visitas_por_anio[y] = visitas_por_anio.get(y, 0) + 1
+
+        for reg_year in registros_years:
+            reg_year['total_fechas_unicas'] = visitas_por_anio.get(reg_year['year'], reg_year['total_fechas_unicas'])
         
 
         #tabla 3

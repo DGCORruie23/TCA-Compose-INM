@@ -258,6 +258,47 @@
             font-size: 12px !important;
         }
     }
+
+    /* Estilos para pantalla completa de la sección de gráfica */
+    #grafica-areas-section:fullscreen {
+        background-color: #ffffff;
+        width: 100vw;
+        height: 100vh;
+        max-width: none !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        padding: 2rem 2.5rem !important;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    #grafica-areas-section:-webkit-full-screen {
+        background-color: #ffffff;
+        width: 100vw;
+        height: 100vh;
+        max-width: none !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        padding: 2rem 2.5rem !important;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+    }
+    #grafica-areas-section.grafica-fullscreen-fallback {
+        position: fixed !important;
+        inset: 0 !important;
+        z-index: 9999 !important;
+        background-color: #ffffff !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: none !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        padding: 2rem 2.5rem !important;
+        overflow-y: auto !important;
+    }
 </style>
 {% endblock styles %}
 
@@ -373,7 +414,57 @@
   {% endif %}
 
     <!-- Contenedor Principal para centrar vertical y horizontal -->
-    <section class="min-h-screen flex flex-col justify-center items-center space-y-8">
+    <section class="min-h-screen flex flex-col justify-center items-center space-y-8 w-full px-4">
+
+        <!-- Gráfica de Barras de Acuerdos por Área (debajo del mapa) -->
+        <div id="grafica-areas-section" class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-200 w-full max-w-7xl mx-auto mt-4 relative">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-gray-200 pb-4 mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-700">Seguimiento a Instrucciones derivadas de las Visitas de Supervisión a las Oficinas de Representación</h2>
+                    <p id="grafica-rango-fechas" class="text-xs sm:text-sm text-gray-500 mt-1 font-medium"></p>
+                </div>
+                <!-- Leyenda de colores y botón de pantalla completa -->
+                <div class="flex flex-wrap items-center gap-5 text-sm font-medium text-gray-700">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-4 h-4 rounded" style="background-color: #facc15; border: 1px solid #ca8a04;"></span>
+                        <span>% Avance (Atendidos)</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-4 h-4 rounded" style="background-color: #3b82f6; border: 1px solid #1d4ed8;"></span>
+                        <span>% Pendiente</span>
+                    </div>
+                    <button type="button" id="btn-fullscreen-grafica" class="px-3.5 py-2 bg-inm-verde-100 hover:bg-inm-verde-200 text-white rounded-lg text-xs sm:text-sm font-semibold shadow-sm transition flex items-center gap-2">
+                        <svg id="icon-expand-grafica" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        <svg id="icon-compress-grafica" class="h-4 w-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0v4m0-4h4m7 5l5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m7-5l5 5m0 0v-4m0 4h-4" />
+                        </svg>
+                        <span id="label-fullscreen-grafica">Pantalla completa</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- N Cuadros por Año encima de la gráfica -->
+            <div id="cuadros-anios-grafica" class="flex flex-wrap justify-center gap-4 mb-8">
+                {% for dato in tabla2 %}
+                <div class="rounded-xl px-5 py-3 shadow-md min-w-[165px] text-sm text-white leading-relaxed" style="background-color: {% cycle '#13322B' '#611232' '#1e3a8a' '#0f766e' '#334155' '#92400e' '#4c1d95' %};">
+                    <div><strong>Año:</strong> {{ dato.year }}</div>
+                    <div><strong>Visitas:</strong> {{ dato.total_fechas_unicas }}</div>
+                    <div><strong>Acuerdos:</strong> {{ dato.total_registros }}</div>
+                    <div><strong>Avance:</strong> {% widthratio dato.total_aten dato.total_registros 100 %}%</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Contenedor de la gráfica SVG con scroll horizontal si hay muchas áreas -->
+            <div class="w-full overflow-x-auto pb-2">
+                <div id="grafica-barras-contenedor" class="min-w-[750px] w-full"></div>
+            </div>
+
+            <!-- Tooltip flotante al pasar el cursor por una barra -->
+            <div id="grafica-barras-tooltip" class="hidden fixed z-50 pointer-events-none bg-gray-900/95 text-white text-xs rounded-lg px-3.5 py-2.5 shadow-xl border border-gray-700 whitespace-pre-line leading-5"></div>
+        </div>
         
         <!-- Texto centrado -->
         <h1 class="text-3xl font-bold text-gray-700">Visitas Realizadas: <strong> {{ visitas }} </strong></h1>
@@ -1054,6 +1145,9 @@
 
             if (visits.length === 0) {
                 gridContenedor.innerHTML = '<p class="col-span-3 text-center text-gray-500 py-4">No hay visitas registradas para la selección actual.</p>';
+                if (typeof initAreaBarChart === 'function') {
+                    initAreaBarChart();
+                }
                 return;
             }
 
@@ -1163,7 +1257,469 @@
                     window.print();
                 });
             }
+
+            if (typeof initAreaBarChart === 'function') {
+                initAreaBarChart();
+            }
         }
+
+        const consultaFechaHora = new Date();
+        const yearCardColors = [
+            '#13322B', // Verde oscuro institucional
+            '#611232', // Guinda institucional
+            '#1e3a8a', // Azul marino profundo
+            '#0f766e', // Verde azulado oscuro
+            '#334155', // Gris pizarra oscuro
+            '#92400e', // Bronce oscuro
+            '#4c1d95'  // Índigo oscuro
+        ];
+
+        function formatearFechaLargaEs(dateObj, incluirHora = false) {
+            const meses = [
+                'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+            ];
+            const dia = String(dateObj.getDate()).padStart(2, '0');
+            const mes = meses[dateObj.getMonth()];
+            const anio = dateObj.getFullYear();
+            if (!incluirHora) {
+                return `${dia} de ${mes} de ${anio}`;
+            }
+            const horas = String(dateObj.getHours()).padStart(2, '0');
+            const minutos = String(dateObj.getMinutes()).padStart(2, '0');
+            return `${dia} de ${mes} de ${anio} a las ${horas}:${minutos} hrs`;
+        }
+
+        function initAreaBarChart() {
+            const table1 = document.getElementById('tablaExcel1');
+            const table2 = document.getElementById('tabla2');
+            const chartContainer = document.getElementById('grafica-barras-contenedor');
+            const yearCardsContainer = document.getElementById('cuadros-anios-grafica');
+            const tooltip = document.getElementById('grafica-barras-tooltip');
+            const rangoFechasEl = document.getElementById('grafica-rango-fechas');
+            const graficaSection = document.getElementById('grafica-areas-section');
+
+            if (!table1 || !chartContainer) return;
+
+            const allRows = Array.from(table1.querySelectorAll('tbody tr')).filter(row => {
+                const firstCell = row.cells[0];
+                return firstCell && !firstCell.textContent.trim().toUpperCase().includes('TOTAL');
+            });
+
+            const visibleRows = allRows.filter(row => row.style.display !== 'none');
+            const isFiltered = visibleRows.length !== allRows.length;
+
+            // Actualizar texto con fecha de la primera visita hasta la fecha y hora de consulta
+            if (rangoFechasEl) {
+                let minDate = null;
+                const rowsForDate = visibleRows.length > 0 ? visibleRows : allRows;
+                rowsForDate.forEach(row => {
+                    const cells = row.cells;
+                    if (cells.length >= 4) {
+                        const dateStr = cells[3].textContent.trim();
+                        const parts = dateStr.split('/');
+                        if (parts.length === 3) {
+                            const d = new Date(parseInt(parts[2], 10), parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+                            if (!isNaN(d.getTime()) && (!minDate || d < minDate)) {
+                                minDate = d;
+                            }
+                        }
+                    }
+                });
+
+                const textoConsulta = formatearFechaLargaEs(consultaFechaHora, true);
+                if (minDate) {
+                    rangoFechasEl.textContent = `${formatearFechaLargaEs(minDate, false)} al ${textoConsulta}`;
+                } else {
+                    rangoFechasEl.textContent = `Consultado el ${textoConsulta}`;
+                }
+            }
+
+            // 1. Actualizar N cuadros de años encima de la gráfica
+            if (yearCardsContainer) {
+                const yearsData = [];
+
+                if (!isFiltered && table2) {
+                    const t2Rows = Array.from(table2.querySelectorAll('tbody tr')).filter(row => {
+                        const firstCell = row.cells[0];
+                        return firstCell && !firstCell.textContent.trim().toUpperCase().includes('TOTAL');
+                    });
+                    t2Rows.forEach(row => {
+                        const cells = row.cells;
+                        if (cells.length >= 6) {
+                            const year = cells[0].textContent.trim();
+                            const visitas = parseInt(cells[1].textContent.trim(), 10) || 0;
+                            const acuerdos = parseInt(cells[2].textContent.trim(), 10) || 0;
+                            const atendidos = parseInt(cells[3].textContent.trim(), 10) || 0;
+                            const avance = acuerdos > 0 ? Math.round((atendidos / acuerdos) * 100) : 0;
+                            yearsData.push({ year, visitas, acuerdos, avance });
+                        }
+                    });
+                } else {
+                    const byYear = {};
+                    visibleRows.forEach(row => {
+                        const cells = row.cells;
+                        if (cells.length >= 7) {
+                            const dateStr = cells[3].textContent.trim();
+                            const parts = dateStr.split('/');
+                            const year = parts.length === 3 ? parts[2] : 'N/A';
+                            const visitas = parseInt(cells[2].textContent.trim(), 10) || 1;
+                            const acuerdos = parseInt(cells[4].textContent.trim(), 10) || 0;
+                            const atendidos = parseInt(cells[5].textContent.trim(), 10) || 0;
+                            if (!byYear[year]) {
+                                byYear[year] = { year, visitas: 0, acuerdos: 0, atendidos: 0 };
+                            }
+                            byYear[year].visitas += visitas;
+                            byYear[year].acuerdos += acuerdos;
+                            byYear[year].atendidos += atendidos;
+                        }
+                    });
+                    Object.keys(byYear).sort().forEach(y => {
+                        const item = byYear[y];
+                        const avance = item.acuerdos > 0 ? Math.round((item.atendidos / item.acuerdos) * 100) : 0;
+                        yearsData.push({
+                            year: item.year,
+                            visitas: item.visitas,
+                            acuerdos: item.acuerdos,
+                            avance
+                        });
+                    });
+                }
+
+                if (yearsData.length > 0) {
+                    yearCardsContainer.innerHTML = '';
+                    yearsData.forEach((d, idx) => {
+                        const card = document.createElement('div');
+                        const bgColor = yearCardColors[idx % yearCardColors.length];
+                        card.className = 'rounded-xl px-5 py-3 shadow-md min-w-[165px] text-sm text-white leading-relaxed whitespace-pre-line';
+                        card.style.backgroundColor = bgColor;
+                        card.innerHTML = `<div><strong>Año:</strong> ${d.year}</div><div><strong>Visitas:</strong> ${d.visitas}</div><div><strong>Acuerdos:</strong> ${d.acuerdos}</div><div><strong>Avance:</strong> ${d.avance}%</div>`;
+                        yearCardsContainer.appendChild(card);
+                    });
+                }
+            }
+
+            // 2. Agrupar datos por Área (sin la palabra "OR")
+            const areaMap = {};
+            visibleRows.forEach(row => {
+                const cells = row.cells;
+                if (cells.length >= 7) {
+                    const rawArea = cells[0].textContent.trim();
+                    const areaName = rawArea.replace(/^OR\s+/i, '').trim();
+                    const visitas = parseInt(cells[2].textContent.trim(), 10) || 1;
+                    const acuerdos = parseInt(cells[4].textContent.trim(), 10) || 0;
+                    const atendidos = parseInt(cells[5].textContent.trim(), 10) || 0;
+                    const pendientes = parseInt(cells[6].textContent.trim(), 10) || 0;
+
+                    if (!areaMap[areaName]) {
+                        areaMap[areaName] = {
+                            area: areaName,
+                            visitas: 0,
+                            acuerdos: 0,
+                            atendidos: 0,
+                            pendientes: 0
+                        };
+                    }
+                    areaMap[areaName].visitas += visitas;
+                    areaMap[areaName].acuerdos += acuerdos;
+                    areaMap[areaName].atendidos += atendidos;
+                    areaMap[areaName].pendientes += pendientes;
+                }
+            });
+
+            const areasList = Object.values(areaMap).map(item => {
+                const pctExact = item.acuerdos > 0 ? (item.atendidos / item.acuerdos) * 100 : 0;
+                const pct = Math.round(pctExact);
+                return {
+                    ...item,
+                    porcentajeExacto: pctExact,
+                    porcentaje: pct
+                };
+            });
+
+            // 3. Ordenar de izquierda a derecha:
+            // Mayor porcentaje de avance primero; en caso de empate, por orden alfabético
+            areasList.sort((a, b) => {
+                if (b.porcentaje !== a.porcentaje) {
+                    return b.porcentaje - a.porcentaje;
+                }
+                return a.area.localeCompare(b.area, 'es', { sensitivity: 'base' });
+            });
+
+            chartContainer.innerHTML = '';
+
+            if (areasList.length === 0) {
+                chartContainer.innerHTML = '<p class="text-center text-gray-500 py-8">No hay datos de acuerdos para graficar.</p>';
+                return;
+            }
+
+            // 4. Construir SVG de la gráfica de barras
+            const isFullscreenActive = Boolean(
+                (graficaSection && (document.fullscreenElement === graficaSection || document.webkitFullscreenElement === graficaSection)) ||
+                (graficaSection && graficaSection.classList.contains('grafica-fullscreen-fallback'))
+            );
+            const margin = { top: 36, right: 24, bottom: 130, left: 64 };
+            const barSlotWidth = Math.max(38, Math.min(68, Math.floor((isFullscreenActive ? (window.innerWidth - 140) : 960) / areasList.length)));
+            const svgWidth = Math.max(780, margin.left + margin.right + areasList.length * barSlotWidth);
+            const svgHeight = isFullscreenActive ? Math.max(480, window.innerHeight - 270) : 450;
+            const plotWidth = svgWidth - margin.left - margin.right;
+            const plotHeight = svgHeight - margin.top - margin.bottom;
+
+            const maxAcuerdos = Math.max(1, ...areasList.map(d => d.acuerdos));
+            const tickCount = 5;
+            const rawStep = maxAcuerdos / tickCount;
+            const mag = Math.pow(10, Math.floor(Math.log10(rawStep || 1)));
+            const residual = rawStep / mag;
+            let niceStep = mag;
+            if (residual > 5) niceStep = 10 * mag;
+            else if (residual > 2) niceStep = 5 * mag;
+            else if (residual > 1) niceStep = 2 * mag;
+            niceStep = Math.max(1, Math.ceil(niceStep));
+            const yMax = Math.ceil(maxAcuerdos / niceStep) * niceStep;
+
+            const svgNS = 'http://www.w3.org/2000/svg';
+            const svg = document.createElementNS(svgNS, 'svg');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', svgHeight);
+            svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+            svg.style.overflow = 'visible';
+
+            // Líneas horizontales y etiquetas del Eje Y (Número de acuerdos)
+            for (let val = 0; val <= yMax; val += niceStep) {
+                const yPos = margin.top + plotHeight - (val / yMax) * plotHeight;
+
+                const gridLine = document.createElementNS(svgNS, 'line');
+                gridLine.setAttribute('x1', margin.left);
+                gridLine.setAttribute('y1', yPos);
+                gridLine.setAttribute('x2', margin.left + plotWidth);
+                gridLine.setAttribute('y2', yPos);
+                gridLine.setAttribute('stroke', val === 0 ? '#6b7280' : '#e5e7eb');
+                gridLine.setAttribute('stroke-width', val === 0 ? '1.5' : '1');
+                if (val > 0) {
+                    gridLine.setAttribute('stroke-dasharray', '4 4');
+                }
+                svg.appendChild(gridLine);
+
+                const yLabel = document.createElementNS(svgNS, 'text');
+                yLabel.setAttribute('x', margin.left - 10);
+                yLabel.setAttribute('y', yPos + 4);
+                yLabel.setAttribute('text-anchor', 'end');
+                yLabel.setAttribute('fill', '#4b5563');
+                yLabel.setAttribute('font-size', '11');
+                yLabel.textContent = val;
+                svg.appendChild(yLabel);
+            }
+
+            // Línea vertical del Eje Y
+            const yAxisLine = document.createElementNS(svgNS, 'line');
+            yAxisLine.setAttribute('x1', margin.left);
+            yAxisLine.setAttribute('y1', margin.top);
+            yAxisLine.setAttribute('x2', margin.left);
+            yAxisLine.setAttribute('y2', margin.top + plotHeight);
+            yAxisLine.setAttribute('stroke', '#6b7280');
+            yAxisLine.setAttribute('stroke-width', '1.5');
+            svg.appendChild(yAxisLine);
+
+            // Título del Eje Y
+            const yAxisTitle = document.createElementNS(svgNS, 'text');
+            const titleX = 18;
+            const titleY = margin.top + plotHeight / 2;
+            yAxisTitle.setAttribute('x', titleX);
+            yAxisTitle.setAttribute('y', titleY);
+            yAxisTitle.setAttribute('text-anchor', 'middle');
+            yAxisTitle.setAttribute('fill', '#374151');
+            yAxisTitle.setAttribute('font-size', '12');
+            yAxisTitle.setAttribute('font-weight', 'bold');
+            yAxisTitle.setAttribute('transform', `rotate(-90 ${titleX} ${titleY})`);
+            yAxisTitle.textContent = 'Número de Acuerdos';
+            svg.appendChild(yAxisTitle);
+
+            // Dibujar barras por cada área
+            const slotW = plotWidth / areasList.length;
+            const barW = Math.max(16, Math.min(44, slotW * 0.68));
+
+            function showTooltip(e, d) {
+                if (!tooltip) return;
+                tooltip.textContent = `# de Pendientes: ${d.pendientes}\n# de atendidos: ${d.atendidos}\n# Acuerdos: ${d.acuerdos}\n# de Visitas: ${d.visitas}`;
+                tooltip.classList.remove('hidden');
+
+                const offset = 14;
+                let left = e.clientX + offset;
+                let top = e.clientY - 10;
+
+                const ttRect = tooltip.getBoundingClientRect();
+                if (left + ttRect.width > window.innerWidth - 12) {
+                    left = e.clientX - ttRect.width - offset;
+                }
+                if (top + ttRect.height > window.innerHeight - 12) {
+                    top = window.innerHeight - ttRect.height - 12;
+                }
+                if (top < 12) top = 12;
+
+                tooltip.style.left = `${left}px`;
+                tooltip.style.top = `${top}px`;
+            }
+
+            function hideTooltip() {
+                if (!tooltip) return;
+                tooltip.classList.add('hidden');
+            }
+
+            areasList.forEach((d, idx) => {
+                const centerX = margin.left + idx * slotW + slotW / 2;
+                const barX = centerX - barW / 2;
+                const totalBarHeight = (d.acuerdos / yMax) * plotHeight;
+                const barTopY = margin.top + plotHeight - totalBarHeight;
+
+                // Proporción de avance (amarillo) y pendiente (azul)
+                const ratioAvance = Math.max(0, Math.min(1, d.porcentajeExacto / 100));
+                const avanceHeight = totalBarHeight * ratioAvance;
+                const pendienteHeight = totalBarHeight - avanceHeight;
+
+                const barGroup = document.createElementNS(svgNS, 'g');
+                barGroup.style.cursor = 'pointer';
+
+                // Segmento Azul: Porcentaje de Pendiente (parte superior de la barra)
+                if (pendienteHeight > 0) {
+                    const rectPendiente = document.createElementNS(svgNS, 'rect');
+                    rectPendiente.setAttribute('x', barX);
+                    rectPendiente.setAttribute('y', barTopY);
+                    rectPendiente.setAttribute('width', barW);
+                    rectPendiente.setAttribute('height', pendienteHeight);
+                    rectPendiente.setAttribute('fill', '#3b82f6');
+                    rectPendiente.setAttribute('stroke', '#1d4ed8');
+                    rectPendiente.setAttribute('stroke-width', '0.5');
+                    barGroup.appendChild(rectPendiente);
+                }
+
+                // Segmento Amarillo: Porcentaje de Avance / Atendidos (parte inferior de la barra)
+                if (avanceHeight > 0) {
+                    const rectAvance = document.createElementNS(svgNS, 'rect');
+                    rectAvance.setAttribute('x', barX);
+                    rectAvance.setAttribute('y', barTopY + pendienteHeight);
+                    rectAvance.setAttribute('width', barW);
+                    rectAvance.setAttribute('height', avanceHeight);
+                    rectAvance.setAttribute('fill', '#facc15');
+                    rectAvance.setAttribute('stroke', '#ca8a04');
+                    rectAvance.setAttribute('stroke-width', '0.5');
+                    barGroup.appendChild(rectAvance);
+                }
+
+                // Área transparente para facilitar el hover incluso en barras pequeñas
+                const hitRect = document.createElementNS(svgNS, 'rect');
+                hitRect.setAttribute('x', barX);
+                hitRect.setAttribute('y', barTopY);
+                hitRect.setAttribute('width', barW);
+                hitRect.setAttribute('height', Math.max(4, totalBarHeight));
+                hitRect.setAttribute('fill', 'transparent');
+                barGroup.appendChild(hitRect);
+
+                // Porcentaje de atendidos en la parte superior de la barra
+                const pctText = document.createElementNS(svgNS, 'text');
+                pctText.setAttribute('x', centerX);
+                pctText.setAttribute('y', barTopY - 7);
+                pctText.setAttribute('text-anchor', 'middle');
+                pctText.setAttribute('fill', '#1f2937');
+                pctText.setAttribute('font-size', '11');
+                pctText.setAttribute('font-weight', 'bold');
+                pctText.textContent = `${d.porcentaje}%`;
+                barGroup.appendChild(pctText);
+
+                // Etiqueta del Eje X: Nombre del Área sin la palabra "OR"
+                const xLabel = document.createElementNS(svgNS, 'text');
+                const labelX = centerX;
+                const labelY = margin.top + plotHeight + 14;
+                xLabel.setAttribute('x', labelX);
+                xLabel.setAttribute('y', labelY);
+                xLabel.setAttribute('text-anchor', 'end');
+                xLabel.setAttribute('fill', '#374151');
+                xLabel.setAttribute('font-size', '11');
+                xLabel.setAttribute('font-weight', '600');
+                xLabel.setAttribute('transform', `rotate(-45 ${labelX} ${labelY})`);
+                xLabel.textContent = d.area;
+                svg.appendChild(xLabel);
+
+                // Eventos del cursor para el tooltip
+                barGroup.addEventListener('mouseenter', (e) => showTooltip(e, d));
+                barGroup.addEventListener('mousemove', (e) => showTooltip(e, d));
+                barGroup.addEventListener('mouseleave', hideTooltip);
+
+                svg.appendChild(barGroup);
+            });
+
+            chartContainer.appendChild(svg);
+        }
+
+        // Control de pantalla completa para la sección de la gráfica
+        (function setupGraficaFullscreen() {
+            const section = document.getElementById('grafica-areas-section');
+            const btn = document.getElementById('btn-fullscreen-grafica');
+            const label = document.getElementById('label-fullscreen-grafica');
+            const iconExpand = document.getElementById('icon-expand-grafica');
+            const iconCompress = document.getElementById('icon-compress-grafica');
+
+            if (!section || !btn) return;
+
+            function isSectionFullscreen() {
+                return (
+                    document.fullscreenElement === section ||
+                    document.webkitFullscreenElement === section ||
+                    section.classList.contains('grafica-fullscreen-fallback')
+                );
+            }
+
+            function syncFullscreenUI() {
+                const active = isSectionFullscreen();
+                if (label) {
+                    label.textContent = active ? 'Salir de pantalla completa' : 'Pantalla completa';
+                }
+                if (iconExpand && iconCompress) {
+                    iconExpand.classList.toggle('hidden', active);
+                    iconCompress.classList.toggle('hidden', !active);
+                }
+                initAreaBarChart();
+            }
+
+            btn.addEventListener('click', () => {
+                if (isSectionFullscreen()) {
+                    if (document.fullscreenElement || document.webkitFullscreenElement) {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        } else if (document.webkitExitFullscreen) {
+                            document.webkitExitFullscreen();
+                        }
+                    } else {
+                        section.classList.remove('grafica-fullscreen-fallback');
+                        document.body.style.overflow = '';
+                        syncFullscreenUI();
+                    }
+                } else {
+                    if (section.requestFullscreen) {
+                        section.requestFullscreen().catch(() => {
+                            section.classList.add('grafica-fullscreen-fallback');
+                            document.body.style.overflow = 'hidden';
+                            syncFullscreenUI();
+                        });
+                    } else if (section.webkitRequestFullscreen) {
+                        section.webkitRequestFullscreen();
+                    } else {
+                        section.classList.add('grafica-fullscreen-fallback');
+                        document.body.style.overflow = 'hidden';
+                        syncFullscreenUI();
+                    }
+                }
+            });
+
+            document.addEventListener('fullscreenchange', syncFullscreenUI);
+            document.addEventListener('webkitfullscreenchange', syncFullscreenUI);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && section.classList.contains('grafica-fullscreen-fallback')) {
+                    section.classList.remove('grafica-fullscreen-fallback');
+                    document.body.style.overflow = '';
+                    syncFullscreenUI();
+                }
+            });
+        })();
 
         initCalendar();
     </script>
